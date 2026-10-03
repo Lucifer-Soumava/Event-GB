@@ -1,0 +1,214 @@
+/**
+ * ====================================================================
+ * TYPOGRAPHY SYSTEM
+ * ====================================================================
+ * - Cinematic Bengali Cultural Elegance
+ * - Black & Antique-Gold Typographic Hierarchy
+ * - Classical Proportions with High Contrast & Readability
+ */
+
+/* Google Fonts Import for Display Serif, Bengali Elegance & Modern UI Body */
+@import url('https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@300;400;500;600;700&family=Cinzel:wght@400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+/* Typography Utilities & Headings */
+.font-display {
+  font-family: var(--font-family-display);
+}
+
+.font-serif {
+  font-family: var(--font-family-serif);
+}
+
+.font-sans {
+  font-family: var(--font-family-sans);
+}
+
+.font-bengali {
+  font-family: var(--font-family-bengali);
+}
+
+/* Event Grand Title (Hero) */
+.type-hero {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-hero);
+  line-height: var(--line-height-tight);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-white);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.9);
+  word-break: normal;
+  overflow-wrap: break-word;
+  hyphens: manual;
+}
+
+.type-hero .gold-accent {
+  color: var(--color-gold-highlight);
+  text-shadow: 0 0 25px rgba(242, 184, 63, 0.35);
+}
+
+/* Headings H1 - H6 */
+h1, .type-h1 {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-3xl);
+  line-height: var(--line-height-tight);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-white);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+h2, .type-h2 {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-2xl);
+  line-height: var(--line-height-snug);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-cream-warm);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+h3, .type-h3 {
+  font-family: var(--font-family-serif);
+  font-size: var(--font-size-xl);
+  line-height: var(--line-height-snug);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-cream-warm);
+  letter-spacing: var(--letter-spacing-normal);
+}
+
+h4, .type-h4 {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-normal);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-gold-highlight);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+h5, .type-h5 {
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-normal);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-cream-warm);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+h6, .type-h6 {
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-gold-muted);
+  letter-spacing: var(--letter-spacing-wider);
+  text-transform: uppercase;
+}
+
+/* Event Subtitles & Overlines */
+.type-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-widest);
+  text-transform: uppercase;
+  color: var(--color-gold-primary);
+}
+
+.type-subtitle {
+  font-family: var(--font-family-serif);
+  font-size: var(--font-size-lg);
+  font-style: italic;
+  line-height: var(--line-height-snug);
+  color: var(--color-cream-muted);
+}
+
+/* Body Copy Variations */
+.type-lead {
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-cream-warm);
+  font-weight: var(--font-weight-regular);
+}
+
+p, .type-body {
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  color: var(--color-cream-warm);
+  font-weight: var(--font-weight-regular);
+}
+
+.type-muted {
+  color: var(--color-cream-dim);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+.type-caption {
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-normal);
+  color: var(--color-cream-dim);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+/* Bengali Cultural Text Integration */
+.bengali-callout {
+  font-family: var(--font-family-bengali);
+  color: var(--color-gold-highlight);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.45;
+  word-break: break-word;
+  text-rendering: optimizeLegibility;
+}
+
+.bengali-tagline {
+  font-family: var(--font-family-bengali);
+  color: var(--color-gold-highlight);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  display: inline-block;
+  text-shadow: 0 0 20px rgba(242, 184, 63, 0.35);
+}
+
+.bengali-subtext {
+  font-family: var(--font-family-bengali);
+  color: var(--color-cream-warm);
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+/* Text Accent Utilities */
+.text-gold {
+  color: var(--color-gold-primary);
+}
+
+.text-gold-bright {
+  color: var(--color-gold-highlight);
+}
+
+.text-gold-muted {
+  color: var(--color-gold-muted);
+}
+
+.text-cream {
+  color: var(--color-cream-warm);
+}
+
+.text-white {
+  color: var(--color-white);
+}
+
+.text-uppercase {
+  text-transform: uppercase;
+}
+
+.tracking-widest {
+  letter-spacing: var(--letter-spacing-widest);
+}
+
+.tracking-wider {
+  letter-spacing: var(--letter-spacing-wider);
+}

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 24" fill="none">
+  <!-- Thin Ornamental Bengali Cultural Divider -->
+  <g stroke="#C9972B" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Left Tapered Line -->
+    <line x1="10" y1="12" x2="135" y2="12" stroke-width="1" stroke="url(#goldGradientLeft)" />
+    <!-- Right Tapered Line -->
+    <line x1="185" y1="12" x2="310" y2="12" stroke-width="1" stroke="url(#goldGradientRight)" />
+    
+    <!-- Central Ornamental Flourish -->
+    <!-- Central Diamond -->
+    <polygon points="160,5 167,12 160,19 153,12" fill="rgba(242, 184, 63, 0.2)" stroke="#F2B83F" stroke-width="1" />
+    <circle cx="160" cy="12" r="1.5" fill="#F4E7C5" stroke="none" />
+    
+    <!-- Flanking Mini Diamonds -->
+    <polygon points="146,9 150,12 146,15 142,12" fill="#C9972B" stroke="none" />
+    <polygon points="174,9 178,12 174,15 170,12" fill="#C9972B" stroke="none" />
+    
+    <!-- Filigree Loops -->
+    <path d="M142 12 C138 7 132 8 134 12 C136 15 140 13 140 12" stroke="#8F6A25" stroke-width="0.8" />
+    <path d="M178 12 C182 7 188 8 186 12 C184 15 180 13 180 12" stroke="#8F6A25" stroke-width="0.8" />
+    
+    <!-- Distal End Dots -->
+    <circle cx="10" cy="12" r="1.5" fill="#8F6A25" stroke="none" />
+    <circle cx="310" cy="12" r="1.5" fill="#8F6A25" stroke="none" />
+  </g>
+  <defs>
+    <linearGradient id="goldGradientLeft" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#C9972B" stop-opacity="0" />
+      <stop offset="60%" stop-color="#8F6A25" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#C9972B" stop-opacity="1" />
+    </linearGradient>
+    <linearGradient id="goldGradientRight" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#C9972B" stop-opacity="1" />
+      <stop offset="40%" stop-color="#8F6A25" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#C9972B" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+</svg>

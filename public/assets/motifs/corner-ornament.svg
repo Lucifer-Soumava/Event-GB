@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <!-- Thin Antique Gold Ornamental Corner Bracket -->
+  <g stroke="#C9972B" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Outer Corner Border -->
+    <path d="M2 46 L2 14 C2 7.37 7.37 2 14 2 L46 2" />
+    <!-- Secondary Inner Accent Line -->
+    <path d="M7 40 L7 16 C7 11.03 11.03 7 16 7 L40 7" stroke="#8F6A25" stroke-width="0.8" />
+    <!-- Filigree Scroll at Apex -->
+    <path d="M12 18 C12 14.5 14.5 12 18 12 C20 12 21.5 13.5 21 15.5 C20.5 17 19 18 17 17.5" stroke="#C9972B" stroke-width="0.9" />
+    <!-- Radiant Accent Diamond -->
+    <polygon points="16,16 18,13 20,16 18,19" fill="#F2B83F" stroke="none" />
+    <!-- Terminal Accent Pearls -->
+    <circle cx="2" cy="46" r="1.5" fill="#F2B83F" stroke="none" />
+    <circle cx="46" cy="2" r="1.5" fill="#F2B83F" stroke="none" />
+  </g>
+</svg>

@@ -1,0 +1,213 @@
+/**
+ * ====================================================================
+ * ORNAMENTAL BORDERS & BENGALI CULTURAL MOTIFS
+ * ====================================================================
+ * - Elegant, Thin Architectural Gold Lines
+ * - Traditional Bengali Alpona & Paisley Filigree Accents
+ * - Subtle Atmospheric Candlelit Ambient Glows
+ */
+
+/* 1. Thin Ornamental Border Styles */
+.border-ornamental-thin {
+  border: 1px solid var(--color-gold-primary);
+}
+
+.border-ornamental-double {
+  border: 3px double var(--color-gold-primary);
+}
+
+.border-ornamental-muted {
+  border: 1px solid var(--color-gold-alpha-25);
+}
+
+/* Inset Ornamental Frame (Traditional Event Poster Aesthetic) */
+.frame-ornamental {
+  position: relative;
+  border: 1px solid var(--color-gold-muted);
+  padding: var(--space-xl);
+  background-color: var(--color-bg-secondary);
+}
+
+.frame-ornamental::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px solid var(--color-gold-alpha-40);
+  pointer-events: none;
+}
+
+/* 2. Corner Filigree Brackets */
+.corner-ornamented {
+  position: relative;
+}
+
+.corner-ornamented::before,
+.corner-ornamented::after {
+  content: '';
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0.85;
+}
+
+/* Top-Left & Bottom-Right Default Brackets */
+.corner-ornamented::before {
+  top: -1px;
+  left: -1px;
+  background-image: url('/assets/motifs/corner-ornament.svg');
+}
+
+.corner-ornamented::after {
+  bottom: -1px;
+  right: -1px;
+  transform: rotate(180deg);
+  background-image: url('/assets/motifs/corner-ornament.svg');
+}
+
+/* Full Four-Corner Bracket Framing for Hero & Key Feature Cards */
+.frame-four-corners {
+  position: relative;
+}
+
+.corner-flourish {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+  background-image: url('/assets/motifs/corner-ornament.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  opacity: 0.85;
+  transition: opacity var(--transition-base), transform var(--transition-base);
+}
+
+.corner-flourish-tl {
+  top: -1px;
+  left: -1px;
+}
+
+.corner-flourish-tr {
+  top: -1px;
+  right: -1px;
+  transform: rotate(90deg);
+}
+
+.corner-flourish-br {
+  bottom: -1px;
+  right: -1px;
+  transform: rotate(180deg);
+}
+
+.corner-flourish-bl {
+  bottom: -1px;
+  left: -1px;
+  transform: rotate(270deg);
+}
+
+.corner-ornamented:hover .corner-flourish,
+.frame-four-corners:hover .corner-flourish {
+  opacity: 1;
+}
+
+/* 3. Cultural Ornamental Section Dividers */
+.ornament-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: var(--space-xl) auto;
+  width: 100%;
+  max-width: 320px;
+  height: 24px;
+  background-image: url('/assets/motifs/cultural-divider.svg');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+.ornament-divider-lg {
+  max-width: 480px;
+  height: 32px;
+}
+
+/* 4. Bengali Alpona Centerpiece Motif */
+.alpona-motif {
+  display: block;
+  margin: 0 auto var(--space-md);
+  width: 80px;
+  height: 40px;
+  background-image: url('/assets/motifs/alpona-flourish.svg');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  filter: drop-shadow(0 0 10px rgba(201, 151, 43, 0.25));
+}
+
+/* 5. Warm Ambient Candlelit Lighting & Glow Utilities */
+.glow-warm-sm {
+  box-shadow: var(--glow-warm-subtle);
+}
+
+.glow-warm-md {
+  box-shadow: var(--glow-warm-medium);
+}
+
+.glow-warm-lg {
+  box-shadow: var(--glow-warm-intense);
+}
+
+/* Atmospheric Ambient Spotlight Container (Warm event glow) */
+.ambient-gold-spotlight {
+  position: relative;
+}
+
+.ambient-gold-spotlight::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(600px, 90vw);
+  height: 180px;
+  background: radial-gradient(ellipse at center, rgba(201, 151, 43, 0.12) 0%, rgba(23, 16, 8, 0) 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Gold Hairline Divider Lines */
+.divider-gold-hairline {
+  height: 1px;
+  border: none;
+  background: linear-gradient(90deg, transparent 0%, var(--color-gold-muted) 30%, var(--color-gold-primary) 50%, var(--color-gold-muted) 70%, transparent 100%);
+  margin: var(--space-xl) 0;
+  opacity: 0.7;
+}
+
+/* Responsive Ornament Tuning */
+@media (max-width: 640px) {
+  .frame-ornamental {
+    padding: clamp(1rem, 3.5vw, 1.5rem);
+  }
+
+  .frame-ornamental::after {
+    inset: 4px;
+  }
+
+  .ornament-divider {
+    max-width: min(260px, 80vw);
+    height: 20px;
+    margin: var(--space-lg) auto;
+  }
+
+  .alpona-motif {
+    width: 64px;
+    height: 32px;
+  }
+
+  .corner-flourish {
+    width: 18px;
+    height: 18px;
+  }
+}

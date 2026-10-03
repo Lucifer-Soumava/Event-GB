@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60" fill="none">
+  <!-- Bengali Alpona / Floral Centerpiece Motif -->
+  <g stroke="#C9972B" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Center Lotus Bud -->
+    <path d="M60 10 C57 22 52 28 60 38 C68 28 63 22 60 10 Z" fill="rgba(201, 151, 43, 0.12)" />
+    <!-- Inner Petals -->
+    <path d="M60 20 C50 24 45 32 54 38" />
+    <path d="M60 20 C70 24 75 32 66 38" />
+    <!-- Outer Whispers -->
+    <path d="M54 28 C40 28 32 36 46 42 C54 44 60 41 60 41" />
+    <path d="M66 28 C80 28 88 36 74 42 C66 44 60 41 60 41" />
+    <!-- Flanking Paisley (Kalka) Flourishes -->
+    <path d="M38 38 C26 38 16 30 20 20 C24 10 36 16 34 26 C33 32 28 34 24 34" stroke-dasharray="0.5 2" />
+    <path d="M82 38 C94 38 104 30 100 20 C96 10 84 16 86 26 C87 32 92 34 96 34" stroke-dasharray="0.5 2" />
+    <!-- Delicate Base Arc -->
+    <path d="M10 46 C35 48 85 48 110 46" stroke="#8F6A25" stroke-width="0.8" />
+    <!-- Center Radiance Dots -->
+    <circle cx="60" cy="6" r="1.5" fill="#F2B83F" stroke="none" />
+    <circle cx="48" cy="14" r="1" fill="#C9972B" stroke="none" />
+    <circle cx="72" cy="14" r="1" fill="#C9972B" stroke="none" />
+    <circle cx="60" cy="46" r="1.5" fill="#F2B83F" stroke="none" />
+  </g>
+</svg>

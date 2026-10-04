@@ -21,6 +21,7 @@ export default function AdminCheckInPage() {
   const [isScanning, setIsScanning] = useState(true);
   const [manualTokenInput, setManualTokenInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [cameraStatus, setCameraStatus] = useState(null);
 
   // Authoritative check-in verification result:
   // status: 'ENTRY_CONFIRMED' | 'ALREADY_CHECKED_IN' | 'INVALID_QR_CODE' | 'WRONG_EVENT' | null
@@ -268,15 +269,33 @@ export default function AdminCheckInPage() {
           <div className="admin-card">
             <div className="admin-card-header">
               <h3 className="admin-card-title">Live Camera Viewfinder</h3>
-              <span style={{ fontSize: '0.72rem', color: '#2ECC71', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#2ECC71', display: 'inline-block' }} />
-                Sensor Active
-              </span>
+              {cameraStatus?.cameraError ? (
+                <span style={{ fontSize: '0.72rem', color: '#ff6b6b', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ff6b6b', display: 'inline-block' }} />
+                  Sensor Offline
+                </span>
+              ) : !cameraStatus?.isCameraActive ? (
+                <span style={{ fontSize: '0.72rem', color: 'var(--color-gold-light)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-gold-light)', display: 'inline-block' }} />
+                  Connecting...
+                </span>
+              ) : isScanning && !isSubmitting ? (
+                <span style={{ fontSize: '0.72rem', color: '#2ECC71', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#2ECC71', display: 'inline-block' }} />
+                  Sensor Active
+                </span>
+              ) : (
+                <span style={{ fontSize: '0.72rem', color: '#F1C40F', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#F1C40F', display: 'inline-block' }} />
+                  Scanner Standby
+                </span>
+              )}
             </div>
 
             <CameraScanner
               onScan={(token) => processCheckIn(token)}
               isScanning={isScanning && !isSubmitting}
+              onStatusChange={setCameraStatus}
             />
 
             {/* Manual Entry Fallback for Damaged Displays or Verbal Ticket IDs */}
@@ -311,6 +330,59 @@ export default function AdminCheckInPage() {
                   disabled={isSubmitting || !manualTokenInput.trim()}
                 >
                   {isSubmitting ? 'Verifying...' : 'Verify Pass'}
+                </button>
+              </div>
+
+              {/* Quick test shortcuts for evaluation */}
+              <div style={{ display: 'flex', gap: '0.35rem', marginTop: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.7rem', color: 'rgba(253,251,247,0.5)' }}>Quick test:</span>
+                <button
+                  type="button"
+                  onClick={() => processCheckIn('GB26-799183-7209')}
+                  disabled={isSubmitting}
+                  style={{
+                    background: 'rgba(46, 204, 113, 0.1)',
+                    border: '1px solid rgba(46, 204, 113, 0.3)',
+                    color: '#a3f0b8',
+                    fontSize: '0.68rem',
+                    padding: '0.15rem 0.45rem',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Valid Pass (Soumava)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => processCheckIn('GB26-94F085-8808')}
+                  disabled={isSubmitting}
+                  style={{
+                    background: 'rgba(241, 196, 15, 0.1)',
+                    border: '1px solid rgba(241, 196, 15, 0.3)',
+                    color: '#f9e79f',
+                    fontSize: '0.68rem',
+                    padding: '0.15rem 0.45rem',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Already Checked (Debolina)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => processCheckIn('INVALID-TEST-TOKEN')}
+                  disabled={isSubmitting}
+                  style={{
+                    background: 'rgba(231, 76, 60, 0.1)',
+                    border: '1px solid rgba(231, 76, 60, 0.3)',
+                    color: '#ff8a80',
+                    fontSize: '0.68rem',
+                    padding: '0.15rem 0.45rem',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Invalid Pass
                 </button>
               </div>
             </form>

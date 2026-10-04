@@ -3,17 +3,26 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+const DEFAULT_SESSIONS = [
+  { id: 'gb-01-inaugural', title: 'Inaugural Ceremony & Mangik Alpona Unveiling', category: 'Inauguration', startTime: '17:00' },
+  { id: 'gb-02-music-classical', title: 'Raga Recital: Melodies of Awakening', category: 'Music', startTime: '17:35' },
+  { id: 'gb-03-recitation-poetry', title: 'Kabita O Kanthoswar: Poetic Eloquence', category: 'Recitation', startTime: '18:20' },
+  { id: 'gb-04-dance-choreography', title: 'Nritya Taranga: Classical & Creative Dance', category: 'Dance', startTime: '18:55' },
+  { id: 'gb-05-theatre-drama', title: 'Natak: Intimate Proscenium Theatre', category: 'Theatre', startTime: '19:40' },
+  { id: 'gb-06-honors-finale', title: 'Emerging Talent Recognition & Grand Collaborative Finale', category: 'Honors', startTime: '20:25' },
+];
+
 export default function RegistrationSection() {
   const router = useRouter();
-  const [sessions, setSessions] = useState([]);
-  const [loadingSessions, setLoadingSessions] = useState(true);
+  const [sessions, setSessions] = useState(DEFAULT_SESSIONS);
+  const [loadingSessions, setLoadingSessions] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     organization: '',
-    eventId: '',
+    eventId: DEFAULT_SESSIONS[0].id,
     consent: false,
   });
 
@@ -22,23 +31,30 @@ export default function RegistrationSection() {
   const [serverError, setServerError] = useState('');
 
   useEffect(() => {
+    let isMounted = true;
     async function loadSessions() {
       try {
         const res = await fetch('/api/schedule');
-        const json = await res.json();
-        if (json.success && json.data) {
-          setSessions(json.data);
-          if (json.data.length > 0) {
-            setFormData((prev) => ({ ...prev, eventId: json.data[0].id }));
+        if (res.ok) {
+          const json = await res.json();
+          if (isMounted && json.success && Array.isArray(json.data) && json.data.length > 0) {
+            setSessions(json.data);
+            setFormData((prev) => ({
+              ...prev,
+              eventId: prev.eventId || json.data[0].id,
+            }));
           }
         }
       } catch (err) {
-        console.error('Error fetching sessions:', err);
+        console.warn('Using default sessions list in homepage registration:', err);
       } finally {
-        setLoadingSessions(false);
+        if (isMounted) setLoadingSessions(false);
       }
     }
     loadSessions();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const validate = () => {
@@ -53,6 +69,9 @@ export default function RegistrationSection() {
     const cleanPhone = formData.phone.replace(/[\s\-\(\)\+]/g, '');
     if (!cleanPhone || cleanPhone.length < 8) {
       newErrors.phone = 'Please provide a valid phone or WhatsApp number.';
+    }
+    if (!formData.eventId) {
+      newErrors.eventId = 'Please select a session or pass category.';
     }
     if (!formData.consent) {
       newErrors.consent = 'You must confirm attendance consent to register.';
@@ -83,10 +102,15 @@ export default function RegistrationSection() {
       setSubmitting(true);
       setServerError('');
 
+      const payload = {
+        ...formData,
+        eventId: formData.eventId || sessions[0]?.id || 'gb-01-inaugural',
+      };
+
       const res = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const json = await res.json();

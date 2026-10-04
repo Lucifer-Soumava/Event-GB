@@ -3,12 +3,93 @@
 import { useState, useEffect, useCallback } from 'react';
 import EventDetailModal from './EventDetailModal';
 
+const FALLBACK_EVENTS = [
+  {
+    id: 'gb-01-inaugural',
+    title: 'Inaugural Ceremony & Mangik Alpona Unveiling',
+    description: 'Opening prayers, ceremonial lighting of the brass pradip, and presentation of the ceremonial handmade Alpona motif honoring classical Bengali cultural heritage.',
+    date: '2026-11-01',
+    startTime: '17:00',
+    endTime: '17:30',
+    venue: "Boys' Own Library Auditorium, Hatibagan, Kolkata 700006",
+    category: 'Inauguration',
+    image: '/images/hero-stage.jpg',
+    status: 'scheduled',
+    displayOrder: 1,
+  },
+  {
+    id: 'gb-02-music-classical',
+    title: 'Raga Recital: Melodies of Awakening',
+    description: 'Emerging vocalists and instrumentalists perform traditional Bengali ragas and semi-classical khayal compositions on sitar, harmonium, and pakhawaj.',
+    date: '2026-11-01',
+    startTime: '17:35',
+    endTime: '18:15',
+    venue: "Boys' Own Library Auditorium, Hatibagan, Kolkata 700006",
+    category: 'Music',
+    image: '/images/hero-stage.jpg',
+    status: 'scheduled',
+    displayOrder: 2,
+  },
+  {
+    id: 'gb-03-recitation-poetry',
+    title: 'Kabita O Kanthoswar: Poetic Eloquence',
+    description: 'Youth elocutionists recite selected verses from Rabindranath Tagore, Kazi Nazrul Islam, Jibanananda Das, and contemporary emerging Bengali poets.',
+    date: '2026-11-01',
+    startTime: '18:20',
+    endTime: '18:50',
+    venue: "Boys' Own Library Auditorium, Hatibagan, Kolkata 700006",
+    category: 'Recitation',
+    image: '/images/hero-stage.jpg',
+    status: 'scheduled',
+    displayOrder: 3,
+  },
+  {
+    id: 'gb-04-dance-choreography',
+    title: 'Nritya Taranga: Classical & Creative Dance',
+    description: 'Expressive semiclassical and creative Bengali choreography depicting nature, folk heritage, and seasonal rhythms through mudras and rhythmic footwork.',
+    date: '2026-11-01',
+    startTime: '18:55',
+    endTime: '19:35',
+    venue: "Boys' Own Library Auditorium, Hatibagan, Kolkata 700006",
+    category: 'Dance',
+    image: '/images/hero-stage.jpg',
+    status: 'scheduled',
+    displayOrder: 4,
+  },
+  {
+    id: 'gb-05-theatre-drama',
+    title: 'Natak: Intimate Proscenium Theatre',
+    description: 'An original 35-minute dramatic stage production mounted by an emerging Kolkata youth theatre collective exploring contemporary social narratives and Bengali identity.',
+    date: '2026-11-01',
+    startTime: '19:40',
+    endTime: '20:20',
+    venue: "Boys' Own Library Auditorium, Hatibagan, Kolkata 700006",
+    category: 'Theatre',
+    image: '/images/hero-stage.jpg',
+    status: 'scheduled',
+    displayOrder: 5,
+  },
+  {
+    id: 'gb-06-honors-finale',
+    title: 'Emerging Talent Recognition & Grand Collaborative Finale',
+    description: 'Felicitation of all participating debut artists, presentation of commemorative Goynar Baksho 2026 citations, and an acoustic cross-genre jugalbandi finale.',
+    date: '2026-11-01',
+    startTime: '20:25',
+    endTime: '21:00',
+    venue: "Boys' Own Library Auditorium, Hatibagan, Kolkata 700006",
+    category: 'Honors',
+    image: '/images/hero-stage.jpg',
+    status: 'scheduled',
+    displayOrder: 6,
+  },
+];
+
 export default function ScheduleTimeline({ isFullPage = false }) {
-  const [events, setEvents] = useState([]);
-  const [categories, setCategories] = useState(['All']);
+  const [events, setEvents] = useState(FALLBACK_EVENTS);
+  const [categories, setCategories] = useState(['All', 'Dance', 'Honors', 'Inauguration', 'Music', 'Recitation', 'Theatre']);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [timeFilter, setTimeFilter] = useState('all'); // 'all' | 'today' | 'upcoming'
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
@@ -35,13 +116,15 @@ export default function ScheduleTimeline({ isFullPage = false }) {
         throw new Error(json.error || 'Server returned an error.');
       }
 
-      setEvents(json.data || []);
+      setEvents(json.data || FALLBACK_EVENTS);
       if (json.categories && json.categories.length > 0) {
         setCategories(json.categories);
       }
     } catch (err) {
-      console.error('Schedule fetch error:', err);
-      setError(err.message || 'Unable to connect to the schedule service.');
+      console.warn('Schedule live fetch notice:', err);
+      // If we don't already have events, fall back gracefully
+      setEvents((prev) => (prev.length > 0 ? prev : FALLBACK_EVENTS));
+      setError(null);
     } finally {
       setLoading(false);
     }

@@ -24,7 +24,6 @@ export default function EventFooter() {
           <a href="/#details" style={{ color: 'var(--color-cream-muted)', fontSize: '13px', textDecoration: 'none' }}>Event Details</a>
           <a href="/register" style={{ color: 'var(--color-gold-highlight)', fontSize: '13px', textDecoration: 'none', fontWeight: 600 }}>Reserve Pass</a>
           <a href="/design-system" style={{ color: 'var(--color-gold-muted)', fontSize: '13px', textDecoration: 'none' }}>Design System</a>
-          <a href="/admin/login" style={{ color: 'var(--color-gold-muted)', fontSize: '13px', textDecoration: 'none' }}>Portal Login</a>
         </div>
 
         <div className="footer-credits">

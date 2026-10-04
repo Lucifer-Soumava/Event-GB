@@ -5,10 +5,20 @@ import { useRouter } from 'next/navigation';
 import EventNav from '@/components/event/EventNav';
 import EventFooter from '@/components/event/EventFooter';
 
+const DEFAULT_SESSIONS = [
+  { id: 'gb-01-inaugural', title: 'Inaugural Ceremony & Mangik Alpona Unveiling', category: 'Inauguration', startTime: '17:00' },
+  { id: 'gb-02-music-classical', title: 'Raga Recital: Melodies of Awakening', category: 'Music', startTime: '17:35' },
+  { id: 'gb-03-recitation-poetry', title: 'Kabita O Kanthoswar: Poetic Eloquence', category: 'Recitation', startTime: '18:20' },
+  { id: 'gb-04-dance-choreography', title: 'Nritya Taranga: Classical & Creative Dance', category: 'Dance', startTime: '18:55' },
+  { id: 'gb-05-theatre-drama', title: 'Natak: Intimate Proscenium Theatre', category: 'Theatre', startTime: '19:40' },
+  { id: 'gb-06-honors-finale', title: 'Emerging Talent Recognition & Grand Collaborative Finale', category: 'Honors', startTime: '20:25' },
+];
+
 export default function RegisterPage() {
   const router = useRouter();
-  const [events, setEvents] = useState([]);
-  const [loadingEvents, setLoadingEvents] = useState(true);
+  // Pre-seed with default sessions so the pass category dropdown is never empty
+  const [events, setEvents] = useState(DEFAULT_SESSIONS);
+  const [loadingEvents, setLoadingEvents] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -16,7 +26,7 @@ export default function RegisterPage() {
     email: '',
     phone: '',
     organization: '',
-    eventId: '',
+    eventId: DEFAULT_SESSIONS[0].id,
     consent: false,
   });
 
@@ -24,25 +34,32 @@ export default function RegisterPage() {
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState('');
 
-  // Fetch available events for session selection
+  // Fetch available events for live session selection
   useEffect(() => {
+    let isMounted = true;
     async function loadSessions() {
       try {
         const res = await fetch('/api/schedule');
-        const json = await res.json();
-        if (json.success && json.data) {
-          setEvents(json.data);
-          if (json.data.length > 0) {
-            setFormData((prev) => ({ ...prev, eventId: json.data[0].id }));
+        if (res.ok) {
+          const json = await res.json();
+          if (isMounted && json.success && Array.isArray(json.data) && json.data.length > 0) {
+            setEvents(json.data);
+            setFormData((prev) => ({
+              ...prev,
+              eventId: prev.eventId || json.data[0].id,
+            }));
           }
         }
       } catch (err) {
-        console.error('Failed to load sessions:', err);
+        console.warn('Using default celebration sessions list:', err);
       } finally {
-        setLoadingEvents(false);
+        if (isMounted) setLoadingEvents(false);
       }
     }
     loadSessions();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Frontend validation
@@ -61,6 +78,10 @@ export default function RegisterPage() {
     const cleanPhone = formData.phone.replace(/[\s\-\(\)\+]/g, '');
     if (!cleanPhone || cleanPhone.length < 8) {
       newErrors.phone = 'Please enter a valid phone or WhatsApp number.';
+    }
+
+    if (!formData.eventId) {
+      newErrors.eventId = 'Please select a session or pass category.';
     }
 
     if (!formData.consent) {
@@ -94,10 +115,16 @@ export default function RegisterPage() {
       setSubmitting(true);
       setServerError('');
 
+      // Ensure valid eventId is always submitted
+      const payload = {
+        ...formData,
+        eventId: formData.eventId || events[0]?.id || 'gb-01-inaugural',
+      };
+
       const res = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const json = await res.json();
@@ -281,19 +308,18 @@ export default function RegisterPage() {
                     value={formData.eventId}
                     onChange={handleChange}
                     className="input-cultural"
-                    disabled={loadingEvents}
                   >
-                    {loadingEvents ? (
-                      <option value="">Loading festival sessions...</option>
-                    ) : (
-                      events.map((evt) => (
-                        <option key={evt.id} value={evt.id}>
-                          {evt.title} ({evt.category} • {evt.startTime})
-                        </option>
-                      ))
-                    )}
+                    {events.map((evt) => (
+                      <option key={evt.id} value={evt.id}>
+                        {evt.title} ({evt.category} • {evt.startTime})
+                      </option>
+                    ))}
                   </select>
-                  <span className="form-helper">Select primary session focus or all-access gala.</span>
+                  {errors.eventId ? (
+                    <span className="form-error">{errors.eventId}</span>
+                  ) : (
+                    <span className="form-helper">Select primary session focus or all-access gala.</span>
+                  )}
                 </div>
               </div>
 

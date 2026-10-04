@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { checkInAttendee } from '@/lib/db';
+import { checkInAttendee, undoCheckInAttendee } from '@/lib/db';
 import { authorizeRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
@@ -22,6 +22,7 @@ export async function POST(request) {
     const body = await request.json();
     let rawToken = body.token || body.qrToken || body.registrationId;
     const targetEventId = body.eventId || body.targetEventId;
+    const isUndo = body.action === 'undo' || body.action === 'reset';
 
     // 2. Validate QR token presence
     if (!rawToken || typeof rawToken !== 'string' || !rawToken.trim()) {
@@ -50,6 +51,28 @@ export async function POST(request) {
       }
     } catch {
       // Keep rawToken as is
+    }
+
+    // Handle Undo Check-in
+    if (isUndo) {
+      const undoResult = undoCheckInAttendee(tokenToVerify);
+      if (!undoResult.success) {
+        return NextResponse.json(
+          {
+            success: false,
+            status: 'NOT_FOUND',
+            message: undoResult.message,
+          },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        status: 'CHECKIN_RESET',
+        message: undoResult.message,
+        registration: undoResult.registration,
+      });
     }
 
     // 3, 4, 5, 6, 7, 8: Authoritative database check & update

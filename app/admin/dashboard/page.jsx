@@ -53,6 +53,7 @@ function DashboardContent() {
   const [scanInput, setScanInput] = useState('');
   const [checkInResult, setCheckInResult] = useState(null);
   const [checkingIn, setCheckingIn] = useState(false);
+  const [checkingInId, setCheckingInId] = useState(null);
 
   // Security Demonstration State
   const [securityTestResult, setSecurityTestResult] = useState(null);
@@ -174,11 +175,12 @@ function DashboardContent() {
   };
 
   // Check-in Handler
-  const handlePerformCheckIn = async (tokenOrId) => {
+  const handlePerformCheckIn = async (tokenOrId, attendeeName) => {
     const target = (tokenOrId || scanInput).trim();
     if (!target) return;
 
     setCheckingIn(true);
+    setCheckingInId(target);
     setCheckInResult(null);
 
     try {
@@ -197,13 +199,26 @@ function DashboardContent() {
         checkInTime: data.checkInTime || data.registration?.checkedInAt,
       });
 
-      if (data.success) {
+      if (res.ok && data.success) {
         setScanInput('');
+        setActionMessage({
+          type: 'success',
+          text: `✓ ${data.registration?.name || attendeeName || 'Attendee'} successfully checked in!`,
+        });
         loadRegistrations();
         if (user?.role === 'ADMIN') loadAnalytics();
+      } else {
+        setActionMessage({
+          type: 'danger',
+          text: `⚠️ Check-in failed: ${data.message || data.error || 'Pass could not be verified.'}`,
+        });
       }
     } catch (err) {
       console.error('Check-in error:', err);
+      setActionMessage({
+        type: 'danger',
+        text: 'Communication error occurred while contacting check-in gate.',
+      });
       setCheckInResult({
         success: false,
         status: 'NETWORK_ERROR',
@@ -211,6 +226,45 @@ function DashboardContent() {
       });
     } finally {
       setCheckingIn(false);
+      setCheckingInId(null);
+    }
+  };
+
+  // Undo / Reset Check-in Handler
+  const handleUndoCheckIn = async (tokenOrId, attendeeName) => {
+    const target = (tokenOrId || '').trim();
+    if (!target) return;
+
+    setCheckingInId(target);
+    try {
+      const res = await fetch('/api/check-in', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: target, action: 'undo' }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setActionMessage({
+          type: 'success',
+          text: `↺ Check-in status for ${attendeeName || 'attendee'} has been reset to "Not Arrived".`,
+        });
+        loadRegistrations();
+        if (user?.role === 'ADMIN') loadAnalytics();
+      } else {
+        setActionMessage({
+          type: 'danger',
+          text: `⚠️ Could not reset check-in: ${data.message || data.error || 'Failed to undo check-in.'}`,
+        });
+      }
+    } catch (err) {
+      console.error('Undo check-in error:', err);
+      setActionMessage({
+        type: 'danger',
+        text: 'Network error occurred while resetting check-in status.',
+      });
+    } finally {
+      setCheckingInId(null);
     }
   };
 
@@ -927,7 +981,7 @@ function DashboardContent() {
                         {sortBy === 'checkedInAt' ? (sortOrder === 'ASC' ? '▲' : '▼') : '↕'}
                       </span>
                     </th>
-                    <th style={{ textAlign: 'right' }}>Actions</th>
+                    <th className="actions-col">ACTIONS</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1014,15 +1068,41 @@ function DashboardContent() {
                             <span style={{ color: 'rgba(253,251,247,0.4)' }}>—</span>
                           )}
                         </td>
-                        <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                          {!reg.checkedIn && (
+                        <td className="actions-col">
+                          {!reg.checkedIn ? (
                             <button
                               type="button"
                               className="btn-action-checkin"
                               style={{ marginRight: '0.4rem' }}
-                              onClick={() => handlePerformCheckIn(reg.qrToken || reg.registrationId)}
+                              onClick={() => handlePerformCheckIn(reg.qrToken || reg.registrationId, reg.name)}
+                              disabled={checkingInId === (reg.qrToken || reg.registrationId)}
                             >
-                              Check In
+                              {checkingInId === (reg.qrToken || reg.registrationId) ? (
+                                <>
+                                  <span className="spinner" style={{ width: '12px', height: '12px' }} />
+                                  Checking In...
+                                </>
+                              ) : (
+                                '✓ Check In'
+                              )}
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className="btn-action-undo"
+                              style={{ marginRight: '0.4rem' }}
+                              onClick={() => handleUndoCheckIn(reg.qrToken || reg.registrationId, reg.name)}
+                              disabled={checkingInId === (reg.qrToken || reg.registrationId)}
+                              title="Reset status back to Not Arrived"
+                            >
+                              {checkingInId === (reg.qrToken || reg.registrationId) ? (
+                                <>
+                                  <span className="spinner" style={{ width: '12px', height: '12px' }} />
+                                  Resetting...
+                                </>
+                              ) : (
+                                '↺ Undo'
+                              )}
                             </button>
                           )}
 

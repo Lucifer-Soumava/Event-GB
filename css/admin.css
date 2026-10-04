@@ -262,10 +262,33 @@
 .table-responsive {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(201, 151, 43, 0.4) #0d0a07;
+  position: relative;
+}
+
+.table-responsive::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: #0d0a07;
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: rgba(201, 151, 43, 0.35);
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gold-primary, #C9972B);
 }
 
 .admin-table {
   width: 100%;
+  min-width: 1100px;
   border-collapse: collapse;
   font-size: 0.82rem;
   text-align: left;
@@ -292,6 +315,29 @@
 
 .admin-table tr:hover td {
   background: rgba(201, 151, 43, 0.04);
+}
+
+/* Sticky Right Actions Column */
+.admin-table th.actions-col,
+.admin-table td.actions-col {
+  position: sticky;
+  right: 0;
+  background: #0f0b07;
+  box-shadow: -6px 0 12px rgba(0, 0, 0, 0.75);
+  z-index: 2;
+  white-space: nowrap;
+  min-width: 165px;
+  text-align: right;
+  padding-right: 1.15rem;
+}
+
+.admin-table th.actions-col {
+  background: #19120a;
+  z-index: 3;
+}
+
+.admin-table tr:hover td.actions-col {
+  background: #16100a;
 }
 
 /* Status Badges */
@@ -322,7 +368,7 @@
   background: rgba(231, 76, 60, 0.12);
   border: 1px solid rgba(231, 76, 60, 0.4);
   color: #ff6b6b;
-  padding: 0.25rem 0.55rem;
+  padding: 0.3rem 0.65rem;
   border-radius: 4px;
   font-size: 0.72rem;
   cursor: pointer;
@@ -344,17 +390,50 @@
   background: rgba(46, 204, 113, 0.15);
   border: 1px solid rgba(46, 204, 113, 0.5);
   color: #2ECC71;
-  padding: 0.25rem 0.65rem;
+  padding: 0.3rem 0.75rem;
   border-radius: 4px;
   font-size: 0.72rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 
-.btn-action-checkin:hover {
+.btn-action-checkin:hover:not(:disabled) {
   background: #2ECC71;
   color: #050505;
+}
+
+.btn-action-checkin:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-action-undo {
+  background: rgba(241, 196, 15, 0.12);
+  border: 1px solid rgba(241, 196, 15, 0.4);
+  color: #F1C40F;
+  padding: 0.3rem 0.65rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.btn-action-undo:hover:not(:disabled) {
+  background: rgba(241, 196, 15, 0.3);
+  color: #fff;
+}
+
+.btn-action-undo:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Controls / Filters */

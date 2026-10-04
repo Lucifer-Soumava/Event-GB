@@ -360,7 +360,7 @@ export default function CameraScanner({ onScan, isScanning = true, onCameraError
     }
   };
 
-  // Photo / File Upload Fallback: Works 100% on ANY browser or insecure HTTP network
+  // Photo / File Upload Fallback: Robust against massive mobile photos, EXIF rotation, and glare
   const handleFileUpload = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -369,58 +369,104 @@ export default function CameraScanner({ onScan, isScanning = true, onCameraError
     setFileScanError(null);
 
     try {
-      const img = new Image();
-      const objectUrl = URL.createObjectURL(file);
+      // 1. Load image using modern createImageBitmap with EXIF orientation if available, or new Image fallback
+      let imgSource = null;
+      let width = 0;
+      let height = 0;
 
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = objectUrl;
-      });
-
-      let foundToken = null;
-
-      // 1. Native detector
-      if (barcodeDetectorRef.current) {
+      if (typeof window !== 'undefined' && 'createImageBitmap' in window) {
         try {
-          const barcodes = await barcodeDetectorRef.current.detect(img);
-          if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
-            foundToken = barcodes[0].rawValue.trim();
-          }
+          imgSource = await createImageBitmap(file, { imageOrientation: 'from-image' });
+          width = imgSource.width;
+          height = imgSource.height;
         } catch {
-          // fallback
+          imgSource = null;
         }
       }
 
-      // 2. jsQR fallback
-      if (!foundToken) {
-        const decoder = getQRDecoder();
-        const canvas = canvasRef.current || document.createElement('canvas');
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        const ctx = canvas.getContext('2d', { willReadFrequently: true });
-        if (ctx) {
-          ctx.drawImage(img, 0, 0);
+      if (!imgSource) {
+        const img = new Image();
+        const objectUrl = URL.createObjectURL(file);
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = objectUrl;
+        });
+        imgSource = img;
+        width = img.naturalWidth || img.width;
+        height = img.naturalHeight || img.height;
+        URL.revokeObjectURL(objectUrl);
+      }
+
+      let foundToken = null;
+      const decoder = getQRDecoder();
+      const canvas = canvasRef.current || document.createElement('canvas');
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+      // Helper function to scan a given canvas region
+      const scanCanvas = async () => {
+        // A. Native BarcodeDetector (fastest)
+        if (barcodeDetectorRef.current) {
+          try {
+            const barcodes = await barcodeDetectorRef.current.detect(canvas);
+            if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+              return barcodes[0].rawValue.trim();
+            }
+          } catch {
+            // fallback
+          }
+        }
+        // B. jsQR CPU fallback
+        if (decoder) {
           const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
           const code = decoder(imgData.data, imgData.width, imgData.height, {
             inversionAttempts: 'attemptBoth',
           });
           if (code && code.data && code.data.trim()) {
-            foundToken = code.data.trim();
+            return code.data.trim();
           }
         }
+        return null;
+      };
+
+      // PASS 1: Rescale down to normalized max 1200px (prevents 48MP mobile camera out-of-memory lockup)
+      const maxDimension = Math.max(width, height);
+      const scale1 = maxDimension > 1200 ? 1200 / maxDimension : 1;
+      const targetW = Math.round(width * scale1);
+      const targetH = Math.round(height * scale1);
+
+      canvas.width = targetW;
+      canvas.height = targetH;
+      ctx.drawImage(imgSource, 0, 0, targetW, targetH);
+      foundToken = await scanCanvas();
+
+      // PASS 2: If not detected, try a Center-Crop pass (center 65% of the photo)
+      if (!foundToken && width > 400 && height > 400) {
+        const cropW = Math.round(width * 0.65);
+        const cropH = Math.round(height * 0.65);
+        const cropX = Math.round((width - cropW) / 2);
+        const cropY = Math.round((height - cropH) / 2);
+
+        const cropScale = Math.max(cropW, cropH) > 900 ? 900 / Math.max(cropW, cropH) : 1;
+        canvas.width = Math.round(cropW * cropScale);
+        canvas.height = Math.round(cropH * cropScale);
+        ctx.drawImage(imgSource, cropX, cropY, cropW, cropH, 0, 0, canvas.width, canvas.height);
+        foundToken = await scanCanvas();
       }
 
-      URL.revokeObjectURL(objectUrl);
+      // Cleanup bitmap if created
+      if (imgSource && typeof imgSource.close === 'function') {
+        imgSource.close();
+      }
 
       if (foundToken) {
         onScanRef.current(foundToken);
       } else {
-        setFileScanError('No readable QR code found in this photo. Try snapping closer under good lighting.');
+        setFileScanError('No readable QR code found in this photo. Make sure the ticket QR is in focus and well lit.');
       }
     } catch (err) {
       console.error('File scan error:', err);
-      setFileScanError('Could not process the uploaded photo. Please try another image.');
+      setFileScanError('Could not process this photo. Please try snapping another picture.');
     } finally {
       setProcessingFile(false);
       if (event.target) event.target.value = '';

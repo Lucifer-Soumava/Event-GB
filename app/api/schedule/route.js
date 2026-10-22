@@ -3,6 +3,7 @@ import { getAllEvents, getCategories, createEvent, reorderEvents } from '@/lib/d
 import { authorizeRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET(request) {
   try {
@@ -42,12 +43,21 @@ export async function GET(request) {
       events = events.filter((e) => e.date >= today);
     }
 
-    return NextResponse.json({
-      success: true,
-      count: events.length,
-      categories: ['All', ...categories],
-      data: events,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        count: events.length,
+        categories: ['All', ...categories],
+        data: events,
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          Pragma: 'no-cache',
+          Expires: '0',
+        },
+      }
+    );
   } catch (error) {
     console.error('API /api/schedule error:', error);
     return NextResponse.json(

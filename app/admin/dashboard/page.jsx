@@ -109,8 +109,15 @@ function DashboardContent() {
       if (eventFilter !== 'all') query.set('eventId', eventFilter);
       query.set('sortBy', sortBy);
       query.set('sortOrder', sortOrder);
+      query.set('_t', Date.now().toString());
 
-      const res = await fetch(`/api/admin/registrations?${query.toString()}`);
+      const res = await fetch(`/api/admin/registrations?${query.toString()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store',
+          Pragma: 'no-cache',
+        },
+      });
       const data = await res.json();
       if (res.ok && data.success) {
         setRegistrations(data.data || []);
@@ -127,7 +134,13 @@ function DashboardContent() {
     if (!user || user.role !== 'ADMIN') return;
     setLoadingAnalytics(true);
     try {
-      const res = await fetch('/api/admin/analytics');
+      const res = await fetch(`/api/admin/analytics?_t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store',
+          Pragma: 'no-cache',
+        },
+      });
       const data = await res.json();
       if (res.ok && data.success) {
         setAnalytics(data.data);
@@ -138,6 +151,19 @@ function DashboardContent() {
       setLoadingAnalytics(false);
     }
   }, [user]);
+
+  // Real-time live polling (auto-syncs every 7 seconds)
+  useEffect(() => {
+    if (!user) return;
+    const interval = setInterval(() => {
+      if (activeTab === 'registrations') {
+        loadRegistrations();
+      } else if (activeTab === 'analytics' && user.role === 'ADMIN') {
+        loadAnalytics();
+      }
+    }, 7000);
+    return () => clearInterval(interval);
+  }, [user, activeTab, loadRegistrations, loadAnalytics]);
 
   // 4. Load Schedule Events
   const loadSchedule = useCallback(async () => {
@@ -871,6 +897,56 @@ function DashboardContent() {
               </div>
 
               <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    fontSize: '0.72rem',
+                    color: '#2ECC71',
+                    background: 'rgba(46, 204, 113, 0.1)',
+                    border: '1px solid rgba(46, 204, 113, 0.25)',
+                    padding: '0.25rem 0.6rem',
+                    borderRadius: '9999px',
+                    marginRight: '0.25rem',
+                  }}
+                  title="Auto-refreshing every 7 seconds"
+                >
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#2ECC71', display: 'inline-block', animation: 'pulse 2s infinite' }}></span>
+                  Live Sync
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => loadRegistrations()}
+                  disabled={loadingData}
+                  className="btn-admin-secondary"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    fontSize: '0.78rem',
+                    padding: '0.45rem 0.85rem',
+                    cursor: loadingData ? 'wait' : 'pointer',
+                  }}
+                  title="Force refresh attendee roster from server"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    style={{ animation: loadingData ? 'spin 1s linear infinite' : 'none' }}
+                  >
+                    <path d="M23 4v6h-6" />
+                    <path d="M1 20v-6h6" />
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                  </svg>
+                  {loadingData ? 'Updating...' : 'Refresh Roster'}
+                </button>
+
                 <button
                   type="button"
                   onClick={exportToCSV}

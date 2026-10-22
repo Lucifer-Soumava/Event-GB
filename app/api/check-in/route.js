@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
-import { checkInAttendee, undoCheckInAttendee } from '@/lib/db';
+import { checkInAttendee, undoCheckInAttendee, syncFromRemoteKv } from '@/lib/db';
 import { authorizeRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function POST(request) {
   // 1. Validate authentication (ADMIN or CHECKIN_STAFF allowed)
@@ -19,6 +20,7 @@ export async function POST(request) {
   }
 
   try {
+    await syncFromRemoteKv();
     const body = await request.json();
     let rawToken = body.token || body.qrToken || body.registrationId;
     const targetEventId = body.eventId || body.targetEventId;

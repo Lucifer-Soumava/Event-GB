@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
-import { getAllRegistrationsAdmin } from '@/lib/db';
+import { getAllRegistrationsAdmin, syncFromRemoteKv } from '@/lib/db';
 import { authorizeRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET(request) {
   // Allow ADMIN and CHECKIN_STAFF
@@ -15,6 +16,9 @@ export async function GET(request) {
   }
 
   try {
+    // If remote KV is configured, sync latest state across serverless containers
+    await syncFromRemoteKv();
+
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search') || '';
     const eventId = searchParams.get('eventId') || 'all';
@@ -54,12 +58,21 @@ export async function GET(request) {
       return reg;
     });
 
-    return NextResponse.json({
-      success: true,
-      count: registrations.length,
-      userRole: auth.session.role,
-      data: registrations,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        count: registrations.length,
+        userRole: auth.session.role,
+        data: registrations,
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          Pragma: 'no-cache',
+          Expires: '0',
+        },
+      }
+    );
   } catch (error) {
     console.error('API /api/admin/registrations error:', error);
     return NextResponse.json(

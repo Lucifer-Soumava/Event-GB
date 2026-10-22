@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import QRCode from 'qrcode';
-import { createRegistration, getRegistrationById, getAllEvents } from '@/lib/db';
+import { createRegistration, getRegistrationById, getAllEvents, syncFromRemoteKv } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function POST(request) {
   try {
@@ -108,7 +109,14 @@ export async function POST(request) {
           createdAt: registration.createdAt,
         },
       },
-      { status: 201 }
+      {
+        status: 201,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          Pragma: 'no-cache',
+          Expires: '0',
+        },
+      }
     );
   } catch (error) {
     console.error('API /api/register error:', error);
@@ -133,6 +141,9 @@ export async function GET(request) {
         { status: 400 }
       );
     }
+
+    // Sync from remote KV if configured
+    await syncFromRemoteKv();
 
     const registration = getRegistrationById(id);
     if (!registration) {
@@ -178,6 +189,13 @@ export async function GET(request) {
         checkedInBy: registration.checkedInBy || null,
         qrCodeDataUrl,
         createdAt: registration.createdAt,
+      },
+    },
+    {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        Pragma: 'no-cache',
+        Expires: '0',
       },
     });
   } catch (error) {

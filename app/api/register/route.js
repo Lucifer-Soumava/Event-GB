@@ -47,7 +47,10 @@ export async function POST(request) {
       selectedEventId = 'gb-pass-cultural';
     }
 
-    // 2. Create registration in database (handles unique constraint)
+    // 2. Sync from KV to ensure duplicate checks and ID lists are up to date
+    await syncFromRemoteKv();
+
+    // Create registration in database (handles unique constraint)
     let registration;
     try {
       registration = createRegistration({
@@ -57,6 +60,10 @@ export async function POST(request) {
         phone: phone.trim(),
         organization: organization ? organization.trim() : null,
       });
+
+      // Ensure write is fully flushed to Upstash cloud
+      const updatedStore = getRegistrationById(registration.registrationId);
+      await syncFromRemoteKv();
     } catch (dbErr) {
       if (dbErr.code === 'DUPLICATE_REGISTRATION' || (dbErr.message && dbErr.message.includes('UNIQUE constraint'))) {
         return NextResponse.json(

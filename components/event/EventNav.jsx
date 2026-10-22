@@ -6,12 +6,12 @@ export default function EventNav({ activeSection }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { id: 'about', label: 'About' },
-    { id: 'highlights', label: 'Highlights' },
-    { id: 'schedule', label: 'Schedule' },
-    { id: 'vision', label: 'Why It Matters' },
-    { id: 'audience', label: 'Audience' },
-    { id: 'details', label: 'Event Details' },
+    { id: 'about', label: 'About', href: '/#about' },
+    { id: 'highlights', label: 'Highlights', href: '/#highlights' },
+    { id: 'schedule', label: 'Events', href: '/schedule' },
+    { id: 'vision', label: 'Why It Matters', href: '/#vision' },
+    { id: 'audience', label: 'Audience', href: '/#audience' },
+    { id: 'details', label: 'Event Details', href: '/#details' },
   ];
 
   // Close mobile menu on resize to desktop
@@ -68,7 +68,7 @@ export default function EventNav({ activeSection }) {
           {navLinks.map((link) => (
             <a
               key={link.id}
-              href={`/#${link.id}`}
+              href={link.href}
               className={`nav-link ${activeSection === link.id ? 'active' : ''}`}
             >
               {link.label}
@@ -124,7 +124,7 @@ export default function EventNav({ activeSection }) {
             {navLinks.map((link) => (
               <a
                 key={link.id}
-                href={`/#${link.id}`}
+                href={link.href}
                 className={`mobile-nav-item ${activeSection === link.id ? 'active' : ''}`}
                 onClick={() => setMobileMenuOpen(false)}
               >
@@ -134,16 +134,6 @@ export default function EventNav({ activeSection }) {
                 </svg>
               </a>
             ))}
-            <a
-              href="/schedule"
-              className="mobile-nav-item"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <span>Full Schedule Page</span>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
-            </a>
           </nav>
 
           <div style={{ marginTop: '2rem', padding: '0 1rem' }}>

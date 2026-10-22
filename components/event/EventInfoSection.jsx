@@ -26,8 +26,8 @@ export default function EventInfoSection() {
     },
     {
       title: 'TIMING & DURATION',
-      value: '5:00 PM – 9:00 PM IST',
-      sub: '4 Hours of Continuous Performances',
+      value: '1:00 PM – 6:30 PM IST',
+      sub: '5.5 Hours of Continuous Performances',
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="12" cy="12" r="10" />

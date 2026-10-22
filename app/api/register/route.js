@@ -43,8 +43,7 @@ export async function POST(request) {
     // Determine target eventId (if none or "all", default to the main inaugural or first event)
     let selectedEventId = eventId;
     if (!selectedEventId || selectedEventId === 'all') {
-      const allEvents = getAllEvents();
-      selectedEventId = allEvents.length > 0 ? allEvents[0].id : 'gb-all-access';
+      selectedEventId = 'gb-pass-cultural';
     }
 
     // 2. Create registration in database (handles unique constraint)
@@ -101,8 +100,8 @@ export async function POST(request) {
           organization: registration.organization,
           eventTitle: registration.eventTitle || 'Goynar Baksho Annual Celebration 2026',
           eventDate: registration.eventDate || '2026-11-01',
-          startTime: registration.startTime || '17:00',
-          endTime: registration.endTime || '21:00',
+          startTime: registration.startTime || '13:00',
+          endTime: registration.endTime || '18:30',
           eventVenue: registration.eventVenue || "Boys' Own Library Auditorium, Hatibagan, Kolkata 700006",
           eventCategory: registration.eventCategory || 'Celebration Gala',
           qrCodeDataUrl,
@@ -170,8 +169,8 @@ export async function GET(request) {
         organization: registration.organization,
         eventTitle: registration.eventTitle || 'Goynar Baksho Annual Celebration 2026',
         eventDate: registration.eventDate || '2026-11-01',
-        startTime: registration.startTime || '17:00',
-        endTime: registration.endTime || '21:00',
+        startTime: registration.startTime || '13:00',
+        endTime: registration.endTime || '18:30',
         eventVenue: registration.eventVenue || "Boys' Own Library Auditorium, Hatibagan, Kolkata 700006",
         eventCategory: registration.eventCategory || 'Celebration Gala',
         checkedIn: Boolean(registration.checkedIn),

@@ -20,16 +20,18 @@ export default function SchedulePage() {
           <div className="type-kicker">
             <span>OFFICIAL PROGRAMME TIMETABLE</span>
             <span>•</span>
+            <span>28 SESSIONS</span>
+            <span>•</span>
             <span>1 NOVEMBER 2026</span>
           </div>
           <h1 className="type-hero" style={{ marginTop: 'var(--space-sm)', marginBottom: 'var(--space-xs)' }}>
-            Celebration <span className="gold-accent">Schedule</span>
+            Celebration <span className="gold-accent">Schedule & Events</span>
           </h1>
           <p className="bengali-callout" style={{ fontSize: 'var(--font-size-md)', color: 'var(--color-gold-highlight)', marginBottom: 'var(--space-md)' }}>
             &ldquo;নতুন শিল্পী, নতুন কণ্ঠ, নতুন সুর&rdquo;
           </p>
           <p className="type-subtitle" style={{ maxWidth: '640px', margin: '0 auto' }}>
-            Boys&apos; Own Library Auditorium, Hatibagan, Kolkata 700006 • 5:00 PM – 9:00 PM IST
+            Boys&apos; Own Library Auditorium, Hatibagan, Kolkata 700006 • 1:00 PM – 6:30 PM IST • 28 Curated Sessions
           </p>
           <div className="ornament-divider" aria-hidden="true"></div>
         </div>

@@ -288,7 +288,7 @@
 
 .admin-table {
   width: 100%;
-  min-width: 1100px;
+  min-width: 1240px;
   border-collapse: collapse;
   font-size: 0.82rem;
   text-align: left;
@@ -317,18 +317,50 @@
   background: rgba(201, 151, 43, 0.04);
 }
 
+/* Compact Session Column */
+.admin-table th.col-session,
+.admin-table td.col-session {
+  min-width: 125px;
+  max-width: 160px;
+  white-space: nowrap;
+}
+
+.badge-session-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.22rem 0.6rem;
+  background: rgba(201, 151, 43, 0.14);
+  border: 1px solid rgba(201, 151, 43, 0.45);
+  color: var(--color-gold-light, #F2B83F);
+  border-radius: 12px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+/* Check-in Time Column */
+.admin-table th.col-checkin-time,
+.admin-table td.col-checkin-time {
+  min-width: 130px;
+  white-space: nowrap;
+  text-align: center;
+  padding-right: 1.25rem;
+}
+
 /* Sticky Right Actions Column */
 .admin-table th.actions-col,
 .admin-table td.actions-col {
   position: sticky;
   right: 0;
   background: #0f0b07;
-  box-shadow: -6px 0 12px rgba(0, 0, 0, 0.75);
+  box-shadow: -8px 0 16px rgba(0, 0, 0, 0.85);
   z-index: 2;
   white-space: nowrap;
-  min-width: 165px;
+  min-width: 175px;
   text-align: right;
-  padding-right: 1.15rem;
+  padding-right: 1.25rem;
 }
 
 .admin-table th.actions-col {

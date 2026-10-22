@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { PASS_CATEGORIES } from '@/lib/passes';
 
 export default function AdminDashboardPage() {
   return (
@@ -920,12 +921,21 @@ function DashboardContent() {
                   setCurrentPage(1);
                 }}
               >
-                <option value="all">All Festival Sessions</option>
-                {scheduleEvents.map((ev) => (
-                  <option key={ev.id} value={ev.id}>
-                    {ev.title}
-                  </option>
-                ))}
+                <option value="all">All Passes &amp; Sessions</option>
+                <optgroup label="Pass Categories">
+                  {PASS_CATEGORIES.map((pass) => (
+                    <option key={pass.id} value={pass.id}>
+                      🎟️ {pass.title}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Auditorium Timeline Sessions">
+                  {scheduleEvents.map((ev) => (
+                    <option key={ev.id} value={ev.id}>
+                      {ev.title}
+                    </option>
+                  ))}
+                </optgroup>
               </select>
 
               <div style={{ marginLeft: 'auto', fontSize: '0.75rem', color: 'var(--color-gold-light)', fontWeight: 600 }}>
@@ -957,7 +967,7 @@ function DashboardContent() {
                       </span>
                     </th>
                     <th>Phone</th>
-                    <th className="sortable-th" onClick={() => handleSort('eventTitle')}>
+                    <th className="sortable-th col-session" onClick={() => handleSort('eventTitle')}>
                       Session
                       <span className="sort-icon">
                         {sortBy === 'eventTitle' ? (sortOrder === 'ASC' ? '▲' : '▼') : '↕'}
@@ -975,7 +985,7 @@ function DashboardContent() {
                         {sortBy === 'checkedIn' ? (sortOrder === 'ASC' ? '▲' : '▼') : '↕'}
                       </span>
                     </th>
-                    <th className="sortable-th" onClick={() => handleSort('checkedInAt')}>
+                    <th className="sortable-th col-checkin-time" onClick={() => handleSort('checkedInAt')}>
                       Check-in Time
                       <span className="sort-icon">
                         {sortBy === 'checkedInAt' ? (sortOrder === 'ASC' ? '▲' : '▼') : '↕'}
@@ -1037,12 +1047,9 @@ function DashboardContent() {
                         </td>
                         <td style={{ fontSize: '0.78rem' }}>{reg.email || '—'}</td>
                         <td style={{ fontSize: '0.78rem', color: 'rgba(253,251,247,0.6)' }}>{reg.phone || '—'}</td>
-                        <td style={{ maxWidth: '200px' }}>
-                          <span style={{ color: 'var(--color-gold-primary)', fontWeight: 500, display: 'block', fontSize: '0.82rem' }}>
-                            {reg.eventTitle || 'Annual Celebration'}
-                          </span>
-                          <span style={{ fontSize: '0.68rem', color: 'rgba(253,251,247,0.5)' }}>
-                            {reg.eventCategory}
+                        <td className="col-session" title={reg.eventTitle || 'Festival Session'}>
+                          <span className="badge-session-pill">
+                            {reg.eventCategory || 'Session'}
                           </span>
                         </td>
                         <td style={{ fontSize: '0.75rem', color: 'rgba(253,251,247,0.65)' }}>
@@ -1059,7 +1066,7 @@ function DashboardContent() {
                             </span>
                           )}
                         </td>
-                        <td style={{ fontSize: '0.75rem' }}>
+                        <td className="col-checkin-time" style={{ fontSize: '0.75rem' }}>
                           {reg.checkedInAt ? (
                             <span style={{ color: '#2ECC71', fontWeight: 600 }}>
                               {new Date(reg.checkedInAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}

@@ -1,24 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import EventNav from '@/components/event/EventNav';
 import EventFooter from '@/components/event/EventFooter';
-
-const DEFAULT_SESSIONS = [
-  { id: 'gb-01-inaugural', title: 'Inaugural Ceremony & Mangik Alpona Unveiling', category: 'Inauguration', startTime: '17:00' },
-  { id: 'gb-02-music-classical', title: 'Raga Recital: Melodies of Awakening', category: 'Music', startTime: '17:35' },
-  { id: 'gb-03-recitation-poetry', title: 'Kabita O Kanthoswar: Poetic Eloquence', category: 'Recitation', startTime: '18:20' },
-  { id: 'gb-04-dance-choreography', title: 'Nritya Taranga: Classical & Creative Dance', category: 'Dance', startTime: '18:55' },
-  { id: 'gb-05-theatre-drama', title: 'Natak: Intimate Proscenium Theatre', category: 'Theatre', startTime: '19:40' },
-  { id: 'gb-06-honors-finale', title: 'Emerging Talent Recognition & Grand Collaborative Finale', category: 'Honors', startTime: '20:25' },
-];
+import { PASS_CATEGORIES } from '@/lib/passes';
 
 export default function RegisterPage() {
   const router = useRouter();
-  // Pre-seed with default sessions so the pass category dropdown is never empty
-  const [events, setEvents] = useState(DEFAULT_SESSIONS);
-  const [loadingEvents, setLoadingEvents] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -26,7 +15,7 @@ export default function RegisterPage() {
     email: '',
     phone: '',
     organization: '',
-    eventId: DEFAULT_SESSIONS[0].id,
+    eventId: PASS_CATEGORIES[0].id,
     consent: false,
   });
 
@@ -34,33 +23,7 @@ export default function RegisterPage() {
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState('');
 
-  // Fetch available events for live session selection
-  useEffect(() => {
-    let isMounted = true;
-    async function loadSessions() {
-      try {
-        const res = await fetch('/api/schedule');
-        if (res.ok) {
-          const json = await res.json();
-          if (isMounted && json.success && Array.isArray(json.data) && json.data.length > 0) {
-            setEvents(json.data);
-            setFormData((prev) => ({
-              ...prev,
-              eventId: prev.eventId || json.data[0].id,
-            }));
-          }
-        }
-      } catch (err) {
-        console.warn('Using default celebration sessions list:', err);
-      } finally {
-        if (isMounted) setLoadingEvents(false);
-      }
-    }
-    loadSessions();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const selectedPass = PASS_CATEGORIES.find((p) => p.id === formData.eventId) || PASS_CATEGORIES[0];
 
   // Frontend validation
   const validateForm = () => {
@@ -118,7 +81,7 @@ export default function RegisterPage() {
       // Ensure valid eventId is always submitted
       const payload = {
         ...formData,
-        eventId: formData.eventId || events[0]?.id || 'gb-01-inaugural',
+        eventId: formData.eventId || PASS_CATEGORIES[0].id,
       };
 
       const res = await fetch('/api/register', {
@@ -300,7 +263,7 @@ export default function RegisterPage() {
 
                 <div className="form-group">
                   <label htmlFor="reg-event-id" className="form-label">
-                    Session / Pass Category <span className="required-mark">*</span>
+                    Pass Category <span className="required-mark">*</span>
                   </label>
                   <select
                     id="reg-event-id"
@@ -309,16 +272,20 @@ export default function RegisterPage() {
                     onChange={handleChange}
                     className="input-cultural"
                   >
-                    {events.map((evt) => (
-                      <option key={evt.id} value={evt.id}>
-                        {evt.title} ({evt.category} • {evt.startTime})
+                    {PASS_CATEGORIES.map((pass) => (
+                      <option key={pass.id} value={pass.id}>
+                        {pass.title} ({pass.category})
                       </option>
                     ))}
                   </select>
                   {errors.eventId ? (
                     <span className="form-error">{errors.eventId}</span>
                   ) : (
-                    <span className="form-helper">Select primary session focus or all-access gala.</span>
+                    selectedPass && (
+                      <span className="form-helper" style={{ color: 'var(--color-gold-light)', marginTop: '6px', display: 'block', fontSize: '0.8rem' }}>
+                        ✦ {selectedPass.description}
+                      </span>
+                    )
                   )}
                 </div>
               </div>

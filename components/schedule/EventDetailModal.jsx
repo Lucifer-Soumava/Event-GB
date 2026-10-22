@@ -116,6 +116,13 @@ export default function EventDetailModal({ event, onClose }) {
             </div>
           </div>
 
+          <div>
+            <span className="type-caption" style={{ color: 'var(--color-gold-muted)' }}>DURATION</span>
+            <div style={{ fontFamily: 'var(--font-family-display)', color: 'var(--color-gold-highlight)', fontWeight: 600 }}>
+              {event.duration || '5 mins'}
+            </div>
+          </div>
+
           <div style={{ gridColumn: '1 / -1' }}>
             <span className="type-caption" style={{ color: 'var(--color-gold-muted)' }}>VENUE</span>
             <div style={{ color: 'var(--color-cream-warm)', fontSize: 'var(--font-size-sm)' }}>

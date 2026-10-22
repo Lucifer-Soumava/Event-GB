@@ -5,7 +5,7 @@ import EventNav from '@/components/event/EventNav';
 import EventHero from '@/components/event/EventHero';
 import AboutSection from '@/components/event/AboutSection';
 import HighlightsSection from '@/components/event/HighlightsSection';
-import ScheduleTimeline from '@/components/schedule/ScheduleTimeline';
+import ScheduleTeaserSection from '@/components/event/ScheduleTeaserSection';
 import WhyItMattersSection from '@/components/event/WhyItMattersSection';
 import AudienceSection from '@/components/event/AudienceSection';
 import EventInfoSection from '@/components/event/EventInfoSection';
@@ -78,7 +78,7 @@ export default function EventHomepage() {
       <main>
         <AboutSection />
         <HighlightsSection />
-        <ScheduleTimeline isFullPage={false} />
+        <ScheduleTeaserSection />
         <WhyItMattersSection />
         <AudienceSection />
         <EventInfoSection />

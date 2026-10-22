@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AdminHeader from '@/components/admin/AdminHeader';
 import CameraScanner from '@/components/admin/CameraScanner';
+import { PASS_CATEGORIES } from '@/lib/passes';
 
 export default function AdminCheckInPage() {
   const router = useRouter();
@@ -254,11 +255,20 @@ export default function AdminCheckInPage() {
               style={{ minWidth: '220px' }}
             >
               <option value="all">All Festival Sessions (Universal Pass)</option>
-              {events.map((ev) => (
-                <option key={ev.id} value={ev.id}>
-                  {ev.title} ({ev.startTime})
-                </option>
-              ))}
+              <optgroup label="Pass Categories">
+                {PASS_CATEGORIES.map((pass) => (
+                  <option key={pass.id} value={pass.id}>
+                    🎟️ {pass.title}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Auditorium Timeline Sessions">
+                {events.map((ev) => (
+                  <option key={ev.id} value={ev.id}>
+                    {ev.title} ({ev.startTime})
+                  </option>
+                ))}
+              </optgroup>
             </select>
           </div>
         </div>

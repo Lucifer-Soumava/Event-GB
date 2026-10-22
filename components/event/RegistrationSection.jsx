@@ -1,28 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-
-const DEFAULT_SESSIONS = [
-  { id: 'gb-01-inaugural', title: 'Inaugural Ceremony & Mangik Alpona Unveiling', category: 'Inauguration', startTime: '17:00' },
-  { id: 'gb-02-music-classical', title: 'Raga Recital: Melodies of Awakening', category: 'Music', startTime: '17:35' },
-  { id: 'gb-03-recitation-poetry', title: 'Kabita O Kanthoswar: Poetic Eloquence', category: 'Recitation', startTime: '18:20' },
-  { id: 'gb-04-dance-choreography', title: 'Nritya Taranga: Classical & Creative Dance', category: 'Dance', startTime: '18:55' },
-  { id: 'gb-05-theatre-drama', title: 'Natak: Intimate Proscenium Theatre', category: 'Theatre', startTime: '19:40' },
-  { id: 'gb-06-honors-finale', title: 'Emerging Talent Recognition & Grand Collaborative Finale', category: 'Honors', startTime: '20:25' },
-];
+import { PASS_CATEGORIES } from '@/lib/passes';
 
 export default function RegistrationSection() {
   const router = useRouter();
-  const [sessions, setSessions] = useState(DEFAULT_SESSIONS);
-  const [loadingSessions, setLoadingSessions] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     organization: '',
-    eventId: DEFAULT_SESSIONS[0].id,
+    eventId: PASS_CATEGORIES[0].id,
     consent: false,
   });
 
@@ -30,32 +20,7 @@ export default function RegistrationSection() {
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState('');
 
-  useEffect(() => {
-    let isMounted = true;
-    async function loadSessions() {
-      try {
-        const res = await fetch('/api/schedule');
-        if (res.ok) {
-          const json = await res.json();
-          if (isMounted && json.success && Array.isArray(json.data) && json.data.length > 0) {
-            setSessions(json.data);
-            setFormData((prev) => ({
-              ...prev,
-              eventId: prev.eventId || json.data[0].id,
-            }));
-          }
-        }
-      } catch (err) {
-        console.warn('Using default sessions list in homepage registration:', err);
-      } finally {
-        if (isMounted) setLoadingSessions(false);
-      }
-    }
-    loadSessions();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const selectedPass = PASS_CATEGORIES.find((p) => p.id === formData.eventId) || PASS_CATEGORIES[0];
 
   const validate = () => {
     const newErrors = {};
@@ -104,7 +69,7 @@ export default function RegistrationSection() {
 
       const payload = {
         ...formData,
-        eventId: formData.eventId || sessions[0]?.id || 'gb-01-inaugural',
+        eventId: formData.eventId || PASS_CATEGORIES[0].id,
       };
 
       const res = await fetch('/api/register', {
@@ -295,7 +260,7 @@ export default function RegistrationSection() {
 
               <div className="form-group">
                 <label htmlFor="hp-reg-event-id" className="form-label">
-                  Session / Pass Category <span className="required-mark">*</span>
+                  Pass Category <span className="required-mark">*</span>
                 </label>
                 <select
                   id="hp-reg-event-id"
@@ -303,18 +268,18 @@ export default function RegistrationSection() {
                   value={formData.eventId}
                   onChange={handleChange}
                   className="input-cultural"
-                  disabled={loadingSessions}
                 >
-                  {loadingSessions ? (
-                    <option value="">Loading sessions...</option>
-                  ) : (
-                    sessions.map((evt) => (
-                      <option key={evt.id} value={evt.id}>
-                        {evt.title} ({evt.category} • {evt.startTime})
-                      </option>
-                    ))
-                  )}
+                  {PASS_CATEGORIES.map((pass) => (
+                    <option key={pass.id} value={pass.id}>
+                      {pass.title} ({pass.category})
+                    </option>
+                  ))}
                 </select>
+                {selectedPass && (
+                  <span className="form-helper" style={{ color: 'var(--color-gold-light)', marginTop: '6px', display: 'block', fontSize: '0.8rem' }}>
+                    ✦ {selectedPass.description}
+                  </span>
+                )}
               </div>
             </div>
 

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { checkInAttendee } from '@/lib/db';
+import { updateRegistrationInKv } from '@/lib/kv';
 import { authorizeRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
@@ -54,6 +55,15 @@ export async function POST(request) {
         { status: statusCode }
       );
     }
+
+    try {
+      await updateRegistrationInKv(token, (rec) => {
+        rec.checkedIn = 1;
+        rec.checkedInAt = result.registration?.checkedInAt || new Date().toISOString();
+        rec.checkedInBy = auth.session.name || auth.session.username;
+        return rec;
+      });
+    } catch (_) {}
 
     return NextResponse.json({
       success: true,

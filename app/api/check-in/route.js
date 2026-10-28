@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { checkInAttendee, undoCheckInAttendee, syncFromRemoteKv } from '@/lib/db';
+import { updateRegistrationInKv } from '@/lib/kv';
 import { authorizeRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
@@ -69,6 +70,15 @@ export async function POST(request) {
         );
       }
 
+      try {
+        await updateRegistrationInKv(tokenToVerify, (rec) => {
+          rec.checkedIn = 0;
+          rec.checkedInAt = null;
+          rec.checkedInBy = null;
+          return rec;
+        });
+      } catch (_) {}
+
       return NextResponse.json({
         success: true,
         status: 'CHECKIN_RESET',
@@ -119,6 +129,16 @@ export async function POST(request) {
         );
       }
     }
+
+    // Persist check-in status permanently in Redis KV
+    try {
+      await updateRegistrationInKv(tokenToVerify, (rec) => {
+        rec.checkedIn = 1;
+        rec.checkedInAt = result.registration.checkedInAt;
+        rec.checkedInBy = result.registration.checkedInBy;
+        return rec;
+      });
+    } catch (_) {}
 
     // Successful check-in: ENTRY CONFIRMED
     return NextResponse.json({

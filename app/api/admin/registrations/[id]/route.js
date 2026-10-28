@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { deleteRegistrationAdmin, getRegistrationById } from '@/lib/db';
+import { deleteRegistrationFromKv } from '@/lib/kv';
 import { authorizeRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
@@ -20,23 +21,12 @@ export async function DELETE(request, { params }) {
 
   try {
     const { id } = await params;
-    const existing = getRegistrationById(id);
 
-    if (!existing) {
-      return NextResponse.json(
-        { success: false, error: 'Registration not found or already deleted.' },
-        { status: 404 }
-      );
-    }
+    // Delete permanently from Redis KV
+    await deleteRegistrationFromKv(id);
 
-    const deleted = deleteRegistrationAdmin(id);
-
-    if (!deleted) {
-      return NextResponse.json(
-        { success: false, error: 'Failed to delete registration.' },
-        { status: 500 }
-      );
-    }
+    // Also remove from in-memory / local store
+    deleteRegistrationAdmin(id);
 
     return NextResponse.json({
       success: true,

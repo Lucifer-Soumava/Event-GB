@@ -1,14 +1,17 @@
 import { NextResponse } from 'next/server';
 import QRCode from 'qrcode';
-import { createRegistration, getRegistrationById, getAllEvents, syncFromRemoteKv } from '@/lib/db';
+import { kv, getRegistrationsFromKv } from '@/lib/kv';
+import { generateRegistrationId, generateQrToken, getStore } from '@/lib/db';
+import { getPassCategoryById } from '@/lib/passes';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function POST(request) {
+// POST: Save a new registration permanently
+export async function POST(req) {
   try {
-    const body = await request.json();
-    const { name, email, phone, organization, eventId, consent } = body;
+    const data = await req.json();
+    const { name, email, phone, organization, eventId, consent } = data;
 
     // 1. Validation on backend
     if (!name || typeof name !== 'string' || name.trim().length < 2) {
@@ -34,55 +37,47 @@ export async function POST(request) {
       );
     }
 
-    if (!consent) {
+    if (!consent && consent !== undefined) {
       return NextResponse.json(
         { success: false, error: 'You must confirm your attendance consent to complete registration.' },
         { status: 400 }
       );
     }
 
-    // Determine target eventId (if none or "all", default to the main inaugural or first event)
     let selectedEventId = eventId;
     if (!selectedEventId || selectedEventId === 'all') {
       selectedEventId = 'gb-pass-cultural';
     }
 
-    // 2. Sync from KV to ensure duplicate checks and ID lists are up to date
-    await syncFromRemoteKv();
+    const targetEmail = (email || '').trim().toLowerCase();
 
-    // Create registration in database (handles unique constraint)
-    let registration;
-    try {
-      registration = createRegistration({
-        eventId: selectedEventId,
-        name: name.trim(),
-        email: email.trim(),
-        phone: phone.trim(),
-        organization: organization ? organization.trim() : null,
-      });
+    // Check duplicate in Redis
+    const existingList = await getRegistrationsFromKv();
+    const isDuplicate = existingList.some(
+      (r) =>
+        (r.email || '').trim().toLowerCase() === targetEmail &&
+        (r.eventId === selectedEventId || (!r.eventId && selectedEventId === 'gb-pass-cultural'))
+    );
 
-      // Ensure write is fully flushed to Upstash cloud
-      const updatedStore = getRegistrationById(registration.registrationId);
-      await syncFromRemoteKv();
-    } catch (dbErr) {
-      if (dbErr.code === 'DUPLICATE_REGISTRATION' || (dbErr.message && dbErr.message.includes('UNIQUE constraint'))) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'This email address is already registered for this celebration session. Check your inbox or registration ID.',
-          },
-          { status: 409 }
-        );
-      }
-      throw dbErr;
+    if (isDuplicate) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'This email address is already registered for this celebration session. Check your inbox or registration ID.',
+        },
+        { status: 409 }
+      );
     }
 
-    // 3. Generate QR code associated with that token
-    // The QR code must NOT contain sensitive personal information (only public regId and cryptographically random token)
+    const registrationId = data.registrationId || generateRegistrationId();
+    const qrToken = data.qrToken || generateQrToken();
+    const now = new Date().toISOString();
+
+    // Generate QR Code associated with token
     const qrPayload = JSON.stringify({
       v: 1,
-      regId: registration.registrationId,
-      token: registration.qrToken,
+      regId: registrationId,
+      token: qrToken,
     });
 
     const qrCodeDataUrl = await QRCode.toDataURL(qrPayload, {
@@ -95,26 +90,58 @@ export async function POST(request) {
       },
     });
 
-    // 4. Return registration confirmation (omitting raw tokens and internal keys)
+    // Pushes to the start of the "registrations" list (never expires)
+    const entry = {
+      id: data.id || Date.now(),
+      registrationId,
+      eventId: selectedEventId,
+      name: (name || '').trim(),
+      email: targetEmail,
+      phone: (phone || '').trim(),
+      organization: organization ? organization.trim() : null,
+      qrToken,
+      qrCodeDataUrl,
+      checkedIn: 0,
+      checkedInAt: null,
+      checkedInBy: null,
+      createdAt: now,
+      ...data,
+      // Canonical keys
+      registrationId,
+      qrToken,
+      qrCodeDataUrl,
+      email: targetEmail,
+      name: (name || '').trim(),
+    };
+
+    // Pushes to the start of the "registrations" list (never expires)
+    await kv.lpush('goynar_baksho_registrations', JSON.stringify(entry));
+
+    // Also update in-memory store so any synchronous reads immediately have it
+    try {
+      const store = getStore();
+      if (store && Array.isArray(store.registrations)) {
+        store.registrations.unshift(entry);
+      }
+    } catch (_) {}
+
+    const pass = getPassCategoryById(selectedEventId);
+    const enriched = {
+      ...entry,
+      eventTitle: pass ? pass.title : 'Goynar Baksho Annual Celebration 2026',
+      eventDate: '2026-11-01',
+      startTime: pass ? pass.startTime : '13:00',
+      endTime: pass ? pass.endTime : '18:30',
+      eventVenue: pass ? pass.venue : "Boys' Own Library Auditorium, Hatibagan, Kolkata 700006",
+      eventCategory: pass ? pass.category : 'Celebration Gala',
+    };
+
     return NextResponse.json(
       {
         success: true,
+        entry: enriched,
+        data: enriched,
         message: 'Registration Successful',
-        data: {
-          registrationId: registration.registrationId,
-          name: registration.name,
-          email: registration.email,
-          phone: registration.phone,
-          organization: registration.organization,
-          eventTitle: registration.eventTitle || 'Goynar Baksho Annual Celebration 2026',
-          eventDate: registration.eventDate || '2026-11-01',
-          startTime: registration.startTime || '13:00',
-          endTime: registration.endTime || '18:30',
-          eventVenue: registration.eventVenue || "Boys' Own Library Auditorium, Hatibagan, Kolkata 700006",
-          eventCategory: registration.eventCategory || 'Celebration Gala',
-          qrCodeDataUrl,
-          createdAt: registration.createdAt,
-        },
       },
       {
         status: 201,
@@ -126,7 +153,7 @@ export async function POST(request) {
       }
     );
   } catch (error) {
-    console.error('API /api/register error:', error);
+    console.error('API /api/register POST error:', error);
     return NextResponse.json(
       {
         success: false,
@@ -137,78 +164,83 @@ export async function POST(request) {
   }
 }
 
+// GET: Fetch all registrations for the admin page OR single registration by ?id=...
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
-    if (!id) {
+    // Fetch all items from index 0 to -1 (the entire list)
+    const rawList = await kv.lrange('goynar_baksho_registrations', 0, -1);
+
+    // @vercel/kv auto-parses JSON, but handle string fallback just in case
+    const registrations = rawList.map((item) =>
+      typeof item === 'string' ? JSON.parse(item) : item
+    );
+
+    // If a specific ID is requested (e.g. from confirmation page /register/confirmation?id=...)
+    if (id) {
+      const registration = registrations.find(
+        (r) => r.registrationId === id || String(r.id) === String(id)
+      );
+
+      if (!registration) {
+        return NextResponse.json(
+          { success: false, error: 'Registration record not found.' },
+          { status: 404 }
+        );
+      }
+
+      let qrCodeDataUrl = registration.qrCodeDataUrl;
+      if (!qrCodeDataUrl && registration.qrToken) {
+        const qrPayload = JSON.stringify({
+          v: 1,
+          regId: registration.registrationId,
+          token: registration.qrToken,
+        });
+        qrCodeDataUrl = await QRCode.toDataURL(qrPayload, {
+          errorCorrectionLevel: 'M',
+          margin: 2,
+          width: 280,
+          color: { dark: '#050505', light: '#F4E7C5' },
+        });
+      }
+
+      const pass = getPassCategoryById(registration.eventId);
       return NextResponse.json(
-        { success: false, error: 'Registration ID required.' },
-        { status: 400 }
+        {
+          success: true,
+          data: {
+            ...registration,
+            eventTitle: registration.eventTitle || (pass ? pass.title : 'Goynar Baksho Annual Celebration 2026'),
+            eventDate: registration.eventDate || '2026-11-01',
+            startTime: registration.startTime || (pass ? pass.startTime : '13:00'),
+            endTime: registration.endTime || (pass ? pass.endTime : '18:30'),
+            eventVenue: registration.eventVenue || (pass ? pass.venue : "Boys' Own Library Auditorium, Hatibagan, Kolkata 700006"),
+            eventCategory: registration.eventCategory || (pass ? pass.category : 'Celebration Gala'),
+            checkedIn: Boolean(registration.checkedIn),
+            checkedInAt: registration.checkedInAt || null,
+            checkedInBy: registration.checkedInBy || null,
+            qrCodeDataUrl,
+            createdAt: registration.createdAt,
+          },
+        },
+        {
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            Pragma: 'no-cache',
+            Expires: '0',
+          },
+        }
       );
     }
 
-    // Sync from remote KV if configured
-    await syncFromRemoteKv();
-
-    const registration = getRegistrationById(id);
-    if (!registration) {
-      return NextResponse.json(
-        { success: false, error: 'Registration record not found.' },
-        { status: 404 }
-      );
-    }
-
-    // Re-generate QR code data URL for display/download
-    const qrPayload = JSON.stringify({
-      v: 1,
-      regId: registration.registrationId,
-      token: registration.qrToken,
-    });
-
-    const qrCodeDataUrl = await QRCode.toDataURL(qrPayload, {
-      errorCorrectionLevel: 'M',
-      margin: 2,
-      width: 280,
-      color: {
-        dark: '#050505',
-        light: '#F4E7C5',
-      },
-    });
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        registrationId: registration.registrationId,
-        name: registration.name,
-        email: registration.email,
-        phone: registration.phone,
-        organization: registration.organization,
-        eventTitle: registration.eventTitle || 'Goynar Baksho Annual Celebration 2026',
-        eventDate: registration.eventDate || '2026-11-01',
-        startTime: registration.startTime || '13:00',
-        endTime: registration.endTime || '18:30',
-        eventVenue: registration.eventVenue || "Boys' Own Library Auditorium, Hatibagan, Kolkata 700006",
-        eventCategory: registration.eventCategory || 'Celebration Gala',
-        checkedIn: Boolean(registration.checkedIn),
-        checkedInAt: registration.checkedInAt || null,
-        checkedInBy: registration.checkedInBy || null,
-        qrCodeDataUrl,
-        createdAt: registration.createdAt,
-      },
-    },
-    {
-      headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-        Pragma: 'no-cache',
-        Expires: '0',
-      },
-    });
+    // Default: return all registrations for the admin page
+    return Response.json(registrations);
   } catch (error) {
     console.error('API /api/register GET error:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to retrieve registration.' },
+      { success: false, error: 'Failed to retrieve registrations.' },
       { status: 500 }
     );
   }

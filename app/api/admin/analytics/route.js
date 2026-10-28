@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getAdminAnalytics, syncFromRemoteKv } from '@/lib/db';
+import { getAdminAnalytics } from '@/lib/db';
+import { kv } from '@/lib/kv';
 import { authorizeRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
@@ -16,8 +17,13 @@ export async function GET() {
   }
 
   try {
-    await syncFromRemoteKv();
-    const analytics = getAdminAnalytics();
+    // Read fresh registrations permanently from Redis
+    const rawList = await kv.lrange('goynar_baksho_registrations', 0, -1);
+    const registrations = rawList.map((item) =>
+      typeof item === 'string' ? JSON.parse(item) : item
+    );
+
+    const analytics = getAdminAnalytics(registrations);
     return NextResponse.json(
       {
         success: true,

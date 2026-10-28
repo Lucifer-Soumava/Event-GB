@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getAllRegistrationsAdmin, syncFromRemoteKv } from '@/lib/db';
+import { kv, enrichRegistrationWithEvent } from '@/lib/kv';
+import { getAllEvents, getStore } from '@/lib/db';
 import { authorizeRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
@@ -16,30 +17,68 @@ export async function GET(request) {
   }
 
   try {
-    // If remote KV is configured, sync latest state across serverless containers
-    await syncFromRemoteKv();
+    // Fetch all items from index 0 to -1 (the entire list) permanently from KV
+    const rawList = await kv.lrange('goynar_baksho_registrations', 0, -1);
+    const registrations = rawList.map((item) =>
+      typeof item === 'string' ? JSON.parse(item) : item
+    );
+
+    // Sync in-memory store so helper methods stay consistent
+    try {
+      const store = getStore();
+      if (store && Array.isArray(registrations)) {
+        store.registrations = registrations;
+      }
+    } catch (_) {}
 
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search') || '';
     const eventId = searchParams.get('eventId') || 'all';
     const checkedIn = searchParams.get('checkedIn') || 'all';
     const sortBy = searchParams.get('sortBy') || 'createdAt';
-    const sortOrder = searchParams.get('sortOrder') || 'DESC';
+    const sortOrder = (searchParams.get('sortOrder') || 'DESC').toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
-    const rawRegistrations = getAllRegistrationsAdmin({
-      search,
-      eventId,
-      checkedIn,
-      sortBy,
-      sortOrder,
+    const allEvents = getAllEvents();
+    let list = registrations.map((r) => enrichRegistrationWithEvent(r, allEvents));
+
+    if (search) {
+      const term = search.toLowerCase().trim();
+      list = list.filter(
+        (r) =>
+          (r.name || '').toLowerCase().includes(term) ||
+          (r.email || '').toLowerCase().includes(term) ||
+          (r.phone || '').toLowerCase().includes(term) ||
+          (r.registrationId || '').toLowerCase().includes(term) ||
+          (r.organization || '').toLowerCase().includes(term)
+      );
+    }
+
+    if (eventId && eventId !== 'all') {
+      list = list.filter((r) => r.eventId === eventId);
+    }
+
+    if (checkedIn !== undefined && checkedIn !== 'all') {
+      const isChecked =
+        checkedIn === '1' || checkedIn === 1 || checkedIn === 'true';
+      list = list.filter((r) => Boolean(r.checkedIn) === isChecked);
+    }
+
+    // Sorting
+    list.sort((a, b) => {
+      let valA = a[sortBy] ?? '';
+      let valB = b[sortBy] ?? '';
+      if (typeof valA === 'string') valA = valA.toLowerCase();
+      if (typeof valB === 'string') valB = valB.toLowerCase();
+
+      if (valA < valB) return sortOrder === 'ASC' ? -1 : 1;
+      if (valA > valB) return sortOrder === 'ASC' ? 1 : -1;
+      return 0;
     });
 
     // Role-based data sanitization:
-    // CHECKIN_STAFF can only view basic attendee information (name, registrationId, eventTitle, checkedIn, checkedInAt, organization)
-    // ADMIN can view full records including phone, email, and qrToken
     const isStaff = auth.session.role === 'CHECKIN_STAFF';
 
-    const registrations = rawRegistrations.map((reg) => {
+    const sanitized = list.map((reg) => {
       if (isStaff) {
         return {
           registrationId: reg.registrationId,
@@ -61,9 +100,10 @@ export async function GET(request) {
     return NextResponse.json(
       {
         success: true,
-        count: registrations.length,
+        count: sanitized.length,
         userRole: auth.session.role,
-        data: registrations,
+        data: sanitized,
+        registrations: sanitized,
       },
       {
         headers: {

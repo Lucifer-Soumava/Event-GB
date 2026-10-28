@@ -117,6 +117,13 @@ export async function POST(req) {
     // Pushes to the start of the "registrations" list (never expires)
     await kv.lpush('goynar_baksho_registrations', JSON.stringify(entry));
 
+    // Dual-save to persistent Redis hash map for zero-data-loss resiliency
+    try {
+      await kv.hset('goynar_baksho_registrations_hash', {
+        [registrationId]: JSON.stringify(entry),
+      });
+    } catch (_) {}
+
     // Also update in-memory store so any synchronous reads immediately have it
     try {
       const store = getStore();
@@ -170,19 +177,24 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
-    // Fetch all items from index 0 to -1 (the entire list)
-    const rawList = await kv.lrange('goynar_baksho_registrations', 0, -1);
-
-    // @vercel/kv auto-parses JSON, but handle string fallback just in case
-    const registrations = rawList.map((item) =>
-      typeof item === 'string' ? JSON.parse(item) : item
-    );
+    // Fetch all items through central resilient reader
+    const registrations = await getRegistrationsFromKv();
 
     // If a specific ID is requested (e.g. from confirmation page /register/confirmation?id=...)
     if (id) {
-      const registration = registrations.find(
+      let registration = registrations.find(
         (r) => r.registrationId === id || String(r.id) === String(id)
       );
+
+      // Resilient fallback: Check persistent hash map if not in list
+      if (!registration) {
+        try {
+          const direct = await kv.hget('goynar_baksho_registrations_hash', id);
+          if (direct) {
+            registration = typeof direct === 'string' ? JSON.parse(direct) : direct;
+          }
+        } catch (_) {}
+      }
 
       if (!registration) {
         return NextResponse.json(

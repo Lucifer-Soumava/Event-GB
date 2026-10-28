@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { checkInAttendee } from '@/lib/db';
+import { checkInAttendee, syncFromRemoteKv } from '@/lib/db';
 import { updateRegistrationInKv } from '@/lib/kv';
 import { authorizeRequest } from '@/lib/auth';
 
@@ -16,6 +16,9 @@ export async function POST(request) {
   }
 
   try {
+    // Always synchronize with authoritative KV to guarantee no registration is missing across serverless instances
+    await syncFromRemoteKv();
+
     const body = await request.json();
     let token = body.token?.trim() || body.registrationId?.trim() || body.qrToken?.trim();
 

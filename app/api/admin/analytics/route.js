@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAdminAnalytics } from '@/lib/db';
-import { kv } from '@/lib/kv';
+import { getRegistrationsFromKv } from '@/lib/kv';
 import { authorizeRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
@@ -18,10 +18,7 @@ export async function GET() {
 
   try {
     // Read fresh registrations permanently from Redis
-    const rawList = await kv.lrange('goynar_baksho_registrations', 0, -1);
-    const registrations = rawList.map((item) =>
-      typeof item === 'string' ? JSON.parse(item) : item
-    );
+    const registrations = await getRegistrationsFromKv();
 
     const analytics = getAdminAnalytics(registrations);
     return NextResponse.json(

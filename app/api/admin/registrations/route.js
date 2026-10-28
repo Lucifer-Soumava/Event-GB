@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { kv, enrichRegistrationWithEvent } from '@/lib/kv';
+import { kv, enrichRegistrationWithEvent, getRegistrationsFromKv } from '@/lib/kv';
 import { getAllEvents, getStore } from '@/lib/db';
 import { authorizeRequest } from '@/lib/auth';
 
@@ -17,11 +17,8 @@ export async function GET(request) {
   }
 
   try {
-    // Fetch all items from index 0 to -1 (the entire list) permanently from KV
-    const rawList = await kv.lrange('goynar_baksho_registrations', 0, -1);
-    const registrations = rawList.map((item) =>
-      typeof item === 'string' ? JSON.parse(item) : item
-    );
+    // Fetch all registrations through central resilient reader
+    const registrations = await getRegistrationsFromKv();
 
     // Sync in-memory store so helper methods stay consistent
     try {

@@ -35,7 +35,7 @@ export default function AdminEventsListPage() {
   // 1. Fetch Current User Session
   const fetchSession = useCallback(async () => {
     try {
-      const res = await fetch('/api/auth/me');
+      const res = await fetch('/api/auth/me', { cache: 'no-store' });
       const data = await res.json();
       if (!res.ok || !data.authenticated) {
         router.push('/admin/login?next=/admin/events');
@@ -65,7 +65,9 @@ export default function AdminEventsListPage() {
   const loadEvents = useCallback(async () => {
     try {
       setLoadingEvents(true);
-      const res = await fetch('/api/schedule?includeUnpublished=true&orderBy=displayOrder');
+      const res = await fetch('/api/schedule?includeUnpublished=true&orderBy=displayOrder', {
+        cache: 'no-store',
+      });
       const data = await res.json();
 
       if (res.ok && data.success) {

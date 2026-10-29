@@ -26,7 +26,7 @@ export async function DELETE(request, { params }) {
     await deleteRegistrationFromKv(id);
 
     // Also remove from in-memory / local store
-    deleteRegistrationAdmin(id);
+    await deleteRegistrationAdmin(id);
 
     return NextResponse.json({
       success: true,

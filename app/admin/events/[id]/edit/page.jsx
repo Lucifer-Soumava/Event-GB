@@ -23,7 +23,7 @@ export default function AdminEditEventPage({ params }) {
   // 1. Fetch Session & Check Role
   const fetchSession = useCallback(async () => {
     try {
-      const res = await fetch('/api/auth/me');
+      const res = await fetch('/api/auth/me', { cache: 'no-store' });
       const data = await res.json();
       if (!res.ok || !data.authenticated) {
         router.push(`/admin/login?next=/admin/events/${eventId}/edit`);
@@ -52,7 +52,7 @@ export default function AdminEditEventPage({ params }) {
   const fetchEvent = useCallback(async () => {
     try {
       setLoadingEvent(true);
-      const res = await fetch(`/api/schedule/${eventId}`);
+      const res = await fetch(`/api/schedule/${eventId}`, { cache: 'no-store' });
       const data = await res.json();
 
       if (res.ok && data.success) {

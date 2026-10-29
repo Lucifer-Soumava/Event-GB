@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getAllEvents, getCategories, createEvent, reorderEvents } from '@/lib/db';
+import { getAllEvents, getCategories, createEvent, reorderEvents, syncFromRemoteKv } from '@/lib/db';
 import { authorizeRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
@@ -7,6 +7,7 @@ export const revalidate = 0;
 
 export async function GET(request) {
   try {
+    await syncFromRemoteKv();
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');
     const status = searchParams.get('status');
@@ -81,6 +82,7 @@ export async function POST(request) {
   }
 
   try {
+    await syncFromRemoteKv();
     const body = await request.json();
 
     // Validation
@@ -97,7 +99,7 @@ export async function POST(request) {
       );
     }
 
-    const newEvent = createEvent(body);
+    const newEvent = await createEvent(body);
 
     return NextResponse.json(
       {
@@ -130,6 +132,7 @@ export async function PUT(request) {
   }
 
   try {
+    await syncFromRemoteKv();
     const body = await request.json();
     const { orderedIds } = body;
 
@@ -140,7 +143,7 @@ export async function PUT(request) {
       );
     }
 
-    const updatedEvents = reorderEvents(orderedIds);
+    const updatedEvents = await reorderEvents(orderedIds);
 
     return NextResponse.json({
       success: true,

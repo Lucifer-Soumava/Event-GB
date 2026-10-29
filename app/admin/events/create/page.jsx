@@ -18,7 +18,7 @@ export default function AdminCreateEventPage() {
   // 1. Fetch Current User Session & enforce ADMIN role
   const fetchSession = useCallback(async () => {
     try {
-      const res = await fetch('/api/auth/me');
+      const res = await fetch('/api/auth/me', { cache: 'no-store' });
       const data = await res.json();
       if (!res.ok || !data.authenticated) {
         router.push('/admin/login?next=/admin/events/create');
@@ -47,7 +47,7 @@ export default function AdminCreateEventPage() {
   useEffect(() => {
     async function loadCategories() {
       try {
-        const res = await fetch('/api/schedule');
+        const res = await fetch('/api/schedule', { cache: 'no-store' });
         const data = await res.json();
         if (res.ok && data.categories) {
           setCategories(data.categories.filter((c) => c !== 'All'));

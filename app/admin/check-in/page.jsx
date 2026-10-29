@@ -71,7 +71,7 @@ export default function AdminCheckInPage() {
   // 1. Fetch Session (ADMIN or CHECKIN_STAFF permitted)
   const fetchSession = useCallback(async () => {
     try {
-      const res = await fetch('/api/auth/me');
+      const res = await fetch('/api/auth/me', { cache: 'no-store' });
       const data = await res.json();
       if (!res.ok || !data.authenticated) {
         router.push('/admin/login?next=/admin/check-in');

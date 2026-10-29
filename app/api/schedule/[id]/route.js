@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getEventById, updateEvent, deleteEvent } from '@/lib/db';
+import { getEventById, updateEvent, deleteEvent, syncFromRemoteKv } from '@/lib/db';
 import { authorizeRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request, { params }) {
   try {
+    await syncFromRemoteKv();
     const { id } = await params;
     const event = getEventById(id);
 
@@ -37,10 +38,11 @@ export async function PATCH(request, { params }) {
   }
 
   try {
+    await syncFromRemoteKv();
     const { id } = await params;
     const body = await request.json();
 
-    const updated = updateEvent(id, body);
+    const updated = await updateEvent(id, body);
     if (!updated) {
       return NextResponse.json(
         { success: false, error: 'Event not found or could not be updated.' },
@@ -73,8 +75,9 @@ export async function DELETE(request, { params }) {
   }
 
   try {
+    await syncFromRemoteKv();
     const { id } = await params;
-    const deleted = deleteEvent(id);
+    const deleted = await deleteEvent(id);
 
     if (!deleted) {
       return NextResponse.json(

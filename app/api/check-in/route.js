@@ -88,11 +88,30 @@ export async function POST(request) {
     }
 
     // 3, 4, 5, 6, 7, 8: Authoritative database check & update
-    const result = checkInAttendee(tokenToVerify, {
+    let result = checkInAttendee(tokenToVerify, {
       staffName: auth.session.name || auth.session.username,
       staffId: auth.session.userId,
       targetEventId,
     });
+
+    // Cold-start disaster recovery: If not found in-memory, query live KV store directly
+    if (!result.success && result.status === 'NOT_FOUND') {
+      const { getRegistrationFromKvById } = await import('@/lib/kv');
+      const remoteRec = await getRegistrationFromKvById(tokenToVerify);
+      if (remoteRec) {
+        const { getStore } = await import('@/lib/db');
+        const store = getStore();
+        if (Array.isArray(store.registrations)) {
+          const exists = store.registrations.some((r) => r.registrationId === remoteRec.registrationId);
+          if (!exists) store.registrations.unshift(remoteRec);
+          result = checkInAttendee(tokenToVerify, {
+            staffName: auth.session.name || auth.session.username,
+            staffId: auth.session.userId,
+            targetEventId,
+          });
+        }
+      }
+    }
 
     // 9. Return appropriate response matching specifications:
     // - ENTRY CONFIRMED

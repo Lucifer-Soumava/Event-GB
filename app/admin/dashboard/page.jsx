@@ -67,7 +67,7 @@ function DashboardContent() {
   // 1. Fetch Current User Session
   const fetchSession = useCallback(async () => {
     try {
-      const res = await fetch('/api/auth/me');
+      const res = await fetch('/api/auth/me', { cache: 'no-store' });
       const data = await res.json();
       if (!res.ok || !data.authenticated) {
         router.push('/admin/login?next=/admin/dashboard');
